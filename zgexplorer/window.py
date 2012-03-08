@@ -21,7 +21,11 @@
 
 from gi.repository import Gtk
 
+from filtermanager import FilterManagerDialog
+
 class ExplorerMainWindow(Gtk.Window):
+
+    filter_manager = None
 
     def __init__(self):
         super(ExplorerMainWindow, self).__init__()
@@ -52,10 +56,15 @@ class ExplorerMainWindow(Gtk.Window):
         
         main_box.pack_start(toolbar, False, True, 0)
 
+        self.filter_manager = FilterManagerDialog()
+
         self.show_all()
 
     def toolitem_new_clicked(self, button):
         print("New Tool Item Clicked")
 
     def toolitem_load_clicked(self, button):
-        print("Load tool Item clicked")
+        res = self.filter_manager.run()
+        self.filter_manager.hide()
+        if res == Gtk.ResponseType.OK:
+            print("Accepted")
