@@ -19,7 +19,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Pango
+
+from templates import BuiltInFilters
+from eventwidgets import TemplateViewer
 
 class FilterManagerDialog(Gtk.Dialog):
 
@@ -29,11 +32,15 @@ class FilterManagerDialog(Gtk.Dialog):
         self.set_title("Filter Manager")
         self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
         self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
-        self.set_size_request(600, 300)
+        self.set_size_request(600, 700)
         self.spacing = 6
         self.margin = 12
 
         self.store = Gtk.ListStore(int, str)
+        self.builtin = BuiltInFilters()
+        for i in self.builtin:
+            print self.builtin[i][0]
+            self.store.append([i, self.builtin[i][0]])
 
         box = self.get_content_area() 
 
@@ -53,6 +60,14 @@ class FilterManagerDialog(Gtk.Dialog):
 
          
         self.filter_view = Gtk.TreeView(self.store)
+        column_pix_name = Gtk.TreeViewColumn(_('Name'))
+        self.filter_view.append_column(column_pix_name)
+        name_rend = Gtk.CellRendererText()
+        name_rend.set_property("ellipsize", Pango.EllipsizeMode.END)
+        column_pix_name.pack_start(name_rend, False)
+        column_pix_name.add_attribute(name_rend, "markup", 1)
+        column_pix_name.set_resizable(True)
+
         self.filter_view.set_headers_visible(False)
         self.filter_view.set_rules_hint(True)
         #box.pack_start(self.filter_view, True, True, 0)
@@ -63,6 +78,10 @@ class FilterManagerDialog(Gtk.Dialog):
         self.scroll.set_shadow_type(Gtk.ShadowType.IN)
         self.scroll.set_border_width(1)
         box.pack_start(self.scroll, True, True, 6)
+
+        # See the Template values
+        self.viewer = TemplateViewer()
+        box.pack_start(self.viewer, False, False, 0)
         
         box.show_all()
 
