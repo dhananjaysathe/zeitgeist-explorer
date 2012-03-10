@@ -22,7 +22,7 @@
 from gi.repository import Gtk, Pango
 
 from templates import BuiltInFilters
-from eventwidgets import TemplateViewer
+from eventwidgets import TemplateViewer, TimeRangeViewer
 
 class FilterManagerDialog(Gtk.Dialog):
 
@@ -39,7 +39,6 @@ class FilterManagerDialog(Gtk.Dialog):
         self.store = Gtk.ListStore(int, str)
         self.builtin = BuiltInFilters()
         for i in self.builtin:
-            print self.builtin[i][0]
             self.store.append([i, self.builtin[i][0]])
 
         box = self.get_content_area() 
@@ -60,6 +59,7 @@ class FilterManagerDialog(Gtk.Dialog):
 
          
         self.filter_view = Gtk.TreeView(self.store)
+        self.filter_view.connect("cursor-changed", self.on_cursor_changed)
         column_pix_name = Gtk.TreeViewColumn(_('Name'))
         self.filter_view.append_column(column_pix_name)
         name_rend = Gtk.CellRendererText()
@@ -78,12 +78,29 @@ class FilterManagerDialog(Gtk.Dialog):
         self.scroll.set_shadow_type(Gtk.ShadowType.IN)
         self.scroll.set_border_width(1)
         box.pack_start(self.scroll, True, True, 6)
+        
+        # Range
+        #self.timerange = TimeRangeViewer()
+        #box.pack_start(self.timerange, False, False, 0)
+
+        # Results Type
+        #restype_label = Gtk.Label("Result Type")
 
         # See the Template values
         self.viewer = TemplateViewer()
+        self.viewer.set_fields_enable(False)
         box.pack_start(self.viewer, False, False, 0)
         
         box.show_all()
+
+    def get_selected_index(self):
+        selection = self.filter_view.get_selection()
+        model, _iter = selection.get_selected()
+        if _iter is not None:
+            app_index = model.get(_iter, 0)
+            return app_index
+        else:
+            return None
 
     def on_button_toggled(self, button, name):
         if button.get_active():
@@ -91,3 +108,8 @@ class FilterManagerDialog(Gtk.Dialog):
         else:
             state = "off"
         print "Button", name, "was turned", state
+
+    def on_cursor_changed(self, treeview):
+        index = self.get_selected_index()
+        if index is not None:
+            self.viewer.set_values(self.builtin[index[0]]) 
