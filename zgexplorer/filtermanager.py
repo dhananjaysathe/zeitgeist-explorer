@@ -98,9 +98,14 @@ class FilterManagerDialog(Gtk.Dialog):
         model, _iter = selection.get_selected()
         if _iter is not None:
             app_index = model.get(_iter, 0)
-            return app_index
+            return app_index[0]
         else:
             return None
+
+    def get_selected_entry(self):
+        index = self.get_selected_index()
+        if index is not None:
+            return self.builtin[index]
 
     def on_button_toggled(self, button, name):
         if button.get_active():
@@ -112,4 +117,4 @@ class FilterManagerDialog(Gtk.Dialog):
     def on_cursor_changed(self, treeview):
         index = self.get_selected_index()
         if index is not None:
-            self.viewer.set_values(self.builtin[index[0]]) 
+            self.viewer.set_values(self.builtin[index]) 
