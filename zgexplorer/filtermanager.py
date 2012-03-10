@@ -104,8 +104,11 @@ class FilterManagerDialog(Gtk.Dialog):
 
     def get_selected_entry(self):
         index = self.get_selected_index()
+        is_predefined = True
         if index is not None:
-            return self.builtin[index]
+            return index,self.builtin[index], is_predefined
+
+        return None
 
     def on_button_toggled(self, button, name):
         if button.get_active():

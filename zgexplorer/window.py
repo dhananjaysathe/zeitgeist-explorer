@@ -22,6 +22,7 @@
 from gi.repository import Gtk, Pango
 
 from filtermanager import FilterManagerDialog
+from monitorviewer import MonitorViewer
 
 class ExplorerMainWindow(Gtk.Window):
 
@@ -82,20 +83,27 @@ class ExplorerMainWindow(Gtk.Window):
 
 
 class MonitorWindow(Gtk.VBox):
+    
+    monitor_builtin = {}
+    monitor_custom = {}
+    selected_monitor_view = None
 
     def __init__(self):
         super(MonitorWindow, self).__init__()
 
-        hbox = Gtk.HBox()
-        self.pack_start(hbox, True, True, 12)
+        self.monitor_dialog = FilterManagerDialog()
+
+        self.hbox = Gtk.HBox()
+        self.pack_start(self.hbox, True, True, 12)
 
         list_vbox = Gtk.VBox()
-        hbox.pack_start(list_vbox, False, False, 0)
+        self.hbox.pack_start(list_vbox, False, False, 0)
 
         monitor_vbox = Gtk.VBox()
         list_vbox.pack_start(monitor_vbox, True, True, 0)
-        self.monitors = Gtk.ListStore(int, str)
+        self.monitors = Gtk.ListStore(int, str, bool)
         self.monitor_tree = Gtk.TreeView(self.monitors)
+        self.monitor_tree.connect("cursor-changed", self.on_treeview_selected)
         self.monitor_tree.set_size_request(200, 600)
         self.monitor_tree.set_border_width(1)
         self.monitor_tree.set_visible(True)
@@ -131,14 +139,60 @@ class MonitorWindow(Gtk.VBox):
 
         filter_remove = Gtk.ToolButton.new(None, "Remove Filter")
         filter_remove.set_icon_name("list-remove-symbolic")
+        filter_remove.connect("clicked", self.on_remove_clicked)
         self.toolbar.insert(filter_remove, 1)
 
     def on_add_clicked(self, button):
-        print "Add Clicked"
+        res = self.monitor_dialog.run()
+        self.monitor_dialog.hide()
+        if res == Gtk.ResponseType.OK:
+            index, entry, is_predefined = self.monitor_dialog.get_selected_entry()
+            if entry is not None:
+                if (is_predefined and index in self.monitor_builtin.keys()) or \
+                    (not is_predefined and index in self.monitor_custom.keys()):
+                    return
+
+                self.monitors.append([index, entry[0], is_predefined])
+                # Add it in the list of ids
+                monitor_inst = MonitorViewer()
+                monitor_inst.map(index, is_predefined)
+                if is_predefined:
+                    self.monitor_builtin[index] = monitor_inst
+                else:
+                    self.monitor_custom[index] = monitor_inst
 
     def on_remove_clicked(self, button):
-        print "Remove Clicked"
+        selection = self.monitor_tree.get_selection()
+        if selection is not None:
+            model, _iter = selection.get_selected()
+            if _iter is not None:
+                index = model.get(_iter, 0)[0]
+                is_predefined = model.get(_iter, 2)[0]
+                self.monitors.remove(_iter)
+                if is_predefined:
+                    self.monitor_builtin.pop(index)
+                else:
+                    self.monitor_custom.pop(index)
 
+                if self.selected_monitor_view is not None:
+                    self.hbox.remove(self.selected_monitor_view)
+                    self.selected_monitor_view= None
+
+
+    def on_treeview_selected(self, treeview):
+        selection = self.monitor_tree.get_selection()
+        if selection is not None:
+            model, _iter = selection.get_selected()
+            if _iter is not None:
+                index = model.get(_iter, 0)[0]
+                is_predefined = model.get(_iter, 2)[0]
+                monitor_viewer = self.monitor_builtin[index] if is_predefined \
+                    else self.monitor_custom[index]
+
+                if self.selected_monitor_view is not None:
+                    self.hbox.remove(self.selected_monitor_view)
+                self.hbox.pack_start(monitor_viewer, True, True, 12)
+                self.selected_monitor_view = monitor_viewer
 
 class ExplorerWindow(Gtk.VBox):
 
