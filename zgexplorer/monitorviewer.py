@@ -37,6 +37,7 @@ class MonitorViewer(Gtk.VBox):
 
         self.client = zeitgeist_client
         self.monitor = None
+        self.is_running = False
         # The Entry for this MonitorViewer
         self.entry = None
 
@@ -162,10 +163,18 @@ class MonitorViewer(Gtk.VBox):
     def start_monitor(self, button):
         self.start.set_sensitive(False)
         self.stop.set_sensitive(True)
+        self.is_running = True
         self.monitor = self.client.install_monitor(self.entry[3], \
             [self.entry[2]], self.monitor_insert, self.monitor_delete)
 
     def stop_monitor(self, button):
         self.start.set_sensitive(True)
         self.stop.set_sensitive(False)
+        self.is_running = False
         self.client.remove_monitor(self.monitor)
+
+    def is_monitor_running(self):
+        return self.is_running
+
+    def monitor_stop(self):
+        self.stop_monitor(self.stop)

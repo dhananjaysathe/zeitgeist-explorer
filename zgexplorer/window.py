@@ -170,7 +170,20 @@ class MonitorWindow(Gtk.VBox):
             if _iter is not None:
                 index = model.get(_iter, 0)[0]
                 is_predefined = model.get(_iter, 2)[0]
-                self.monitors.remove(_iter)
+
+                monitor_inst = self.monitor_builtin[index] if is_predefined \
+                    else self.monitor_custom[index]
+                if monitor_inst.is_monitor_running():
+                    # Ask if the user wants to stop it
+                    stop = ConfirmMonitorStop()
+                    res = stop.run()
+                    stop.hide()
+                    if res == Gtk.ResponseType.NO or \
+                            res == Gtk.ResponseType.DELETE_EVENT:
+                        return
+
+                    monitor_inst.monitor_stop()
+
                 if is_predefined:
                     self.monitor_builtin.pop(index)
                 else:
@@ -179,6 +192,8 @@ class MonitorWindow(Gtk.VBox):
                 if self.selected_monitor_view is not None:
                     self.hbox.remove(self.selected_monitor_view)
                     self.selected_monitor_view= None
+
+                self.monitors.remove(_iter)
 
 
     def on_treeview_selected(self, treeview):
@@ -200,3 +215,37 @@ class ExplorerWindow(Gtk.VBox):
 
     def __init__(self):
         super(ExplorerWindow, self).__init__()
+
+class ConfirmMonitorStop(Gtk.Dialog):
+    
+    def __init__(self):
+        super(ConfirmMonitorStop, self).__init__()
+        self.margin = 6
+        self.padding = 12
+        self.set_title("Confirm Monitor Stop")
+        self.set_resizable(False)
+        self.set_modal(True)
+        self.set_decorated(False)
+        self.set_size_request(100, 50)
+
+        self.add_button(Gtk.STOCK_YES, Gtk.ResponseType.YES)
+        self.add_button(Gtk.STOCK_NO, Gtk.ResponseType.NO)
+
+        box = self.get_content_area()
+        
+        label1 = Gtk.Label()
+        label1.set_markup("<b>%s</b>" 
+        %("The monitor which you are trying to remove is still running"))
+        label1.set_alignment(0, 0.5)
+        label1.set_margin_top(12)
+        label1.set_margin_left(12)
+        label1.set_margin_right(12)
+        label2 = Gtk.Label()
+        label2.set_markup("Going ahead will stop the monitor before removing it")
+        label2.set_alignment(0, 0.5)
+        label2.set_margin_left(12)
+        label2.set_margin_right(12)
+        box.pack_start(label1, False, False, 6)
+        box.pack_start(label2, False, False, 6)
+
+        self.show_all()
