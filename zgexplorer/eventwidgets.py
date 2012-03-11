@@ -19,6 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
 
+import codecs
+from datetime import datetime
 from gi.repository import Gtk, Gio
 from zeitgeist.datamodel import Event, Subject, Manifestation, \
     Interpretation, StorageState, Symbol
@@ -201,62 +203,161 @@ class EventViewer(Gtk.VBox):
         id_label.set_alignment(0, 0.5)
         self.table.attach(id_label, 0, 1, 0, 1, xpadding = 6, ypadding =6 )
 
+        self.id_entry = Gtk.Label()
+        self.id_entry.set_alignment(0, 0.5)
+        self.table.attach(self.id_entry, 1, 2, 0, 1, xpadding = 6, ypadding =6)
+
         time_label = Gtk.Label()
         time_label.set_markup("<b>%s</b>" %("Timestamp"))
         time_label.set_alignment(0, 0.5)
         self.table.attach(time_label, 2, 3, 0, 1, xpadding = 6, ypadding = 6)
+
+        self.time_entry = Gtk.Label()
+        self.time_entry.set_alignment(0, 0.5)
+        self.table.attach(self.time_entry, 3, 4, 0, 1, xpadding = 6, ypadding = 6)
 
         event_int_label = Gtk.Label()
         event_int_label.set_markup("<b>%s</b>" %("Interpretation"))
         event_int_label.set_alignment(0, 0.5)
         self.table.attach(event_int_label, 0, 1, 1, 2, xpadding = 6, ypadding = 6)
 
+        self.event_int_entry = Gtk.Label()
+        self.event_int_entry.set_alignment(0, 0.5)
+        self.table.attach(self.event_int_entry, 1, 4, 1, 2, xpadding = 6, ypadding = 6)
+
         event_manifes_label = Gtk.Label()
         event_manifes_label.set_markup("<b>%s</b>" %("Manifestation"))
         event_manifes_label.set_alignment(0, 0.5)
-        self.table.attach(event_manifes_label, 2, 3, 1, 2, xpadding = 6, ypadding = 6)
+        self.table.attach(event_manifes_label, 0, 1, 2, 3, xpadding = 6, ypadding = 6)
+
+        self.event_manifes_entry = Gtk.Label()
+        self.event_manifes_entry.set_alignment(0, 0.5)
+        self.table.attach(self.event_manifes_entry, 1, 4, 2, 3, xpadding = 6, ypadding = 6)
 
         actor_label = Gtk.Label()
         actor_label.set_markup("<b>%s</b>" %("Actor"))
         actor_label.set_alignment(0, 0.5)
-        self.table.attach(actor_label, 0, 1, 2, 3, xpadding = 6, ypadding = 6)
+        self.table.attach(actor_label, 0, 1, 3, 4, xpadding = 6, ypadding = 6)
+
+        self.actor_entry = Gtk.Label()
+        self.actor_entry.set_alignment(0, 0.5)
+        self.table.attach(self.actor_entry, 1, 2, 3, 4, xpadding = 6, ypadding =6)
+
+        actor_box = Gtk.HBox()
+        self.table.attach(actor_box, 2, 4, 3, 4, xpadding = 6, ypadding = 6)
+        self.image_entry = Gtk.Image()
+        self.image_entry.set_alignment(0, 0.5)
+        actor_box.pack_start(self.image_entry, False, False, 6)
+        self.actor_name_entry = Gtk.Label()
+        self.actor_name_entry.set_alignment(0, 0.5)
+        actor_box.pack_start(self.actor_name_entry, False, False, 6)
 
         uri_label = Gtk.Label()
         uri_label.set_markup("<b>%s</b>" %("URI"))
         uri_label.set_alignment(0, 0.5)
-        self.table.attach(uri_label, 0, 1, 3, 4, xpadding = 6, ypadding = 6)
+        self.table.attach(uri_label, 0, 1, 4, 5, xpadding = 6, ypadding = 6)
+
+        self.uri_entry = Gtk.Label()
+        self.uri_entry.set_alignment(0, 0.5)
+        self.table.attach(self.uri_entry, 1, 4, 4, 5, xpadding = 6, ypadding = 6)
 
         current_uri_label = Gtk.Label()
         current_uri_label.set_markup("<b>%s</b>" %("Current URI"))
         current_uri_label.set_alignment(0, 0.5)
-        self.table.attach(current_uri_label, 0, 1, 4, 5, xpadding = 6, ypadding = 6)
+        self.table.attach(current_uri_label, 0, 1, 5, 6, xpadding = 6, ypadding = 6)
+        
+        self.current_uri_entry = Gtk.Label()
+        self.current_uri_entry.set_alignment(0, 0.5)
+        self.table.attach(self.current_uri_entry, 1, 4, 5, 6, xpadding = 6, ypadding = 6)
 
         subj_int_label = Gtk.Label()
         subj_int_label.set_markup("<b>%s</b>" %("Interpretation"))
         subj_int_label.set_alignment(0, 0.5)
-        self.table.attach(subj_int_label, 0, 1, 5, 6, xpadding = 6, ypadding = 6)
+        self.table.attach(subj_int_label, 0, 1, 6, 7, xpadding = 6, ypadding = 6)
+
+        self.subj_int_entry = Gtk.Label()
+        self.subj_int_entry.set_alignment(0, 0.5)
+        self.table.attach(self.subj_int_entry, 1, 4, 6, 7, xpadding = 6, ypadding = 6)
 
         subj_manifes_label = Gtk.Label()
         subj_manifes_label.set_markup("<b>%s</b>" %("Manifestation"))
         subj_manifes_label.set_alignment(0, 0.5)
-        self.table.attach(subj_manifes_label, 2, 3, 5, 6, xpadding = 6, ypadding = 6)
+        self.table.attach(subj_manifes_label, 0, 1, 7, 8, xpadding = 6, ypadding = 6)
+
+        self.subj_manifes_entry = Gtk.Label()
+        self.subj_manifes_entry.set_alignment(0, 0.5)
+        self.table.attach(self.subj_manifes_entry, 1, 4, 7, 8, xpadding = 6, ypadding = 6)
+
 
         origin_label = Gtk.Label()
         origin_label.set_markup("<b>%s</b>" %("Origin"))
         origin_label.set_alignment(0, 0.5)
-        self.table.attach(origin_label, 0, 1, 6, 7, xpadding = 6, ypadding = 6)
+        self.table.attach(origin_label, 0, 1, 8, 9, xpadding = 6, ypadding = 6)
+
+        self.origin_entry = Gtk.Label()
+        self.origin_entry.set_alignment(0, 0.5)
+        self.table.attach(self.origin_entry, 1, 2, 8, 9, xpadding = 6, ypadding =6)
 
         mimetype_label = Gtk.Label()
         mimetype_label.set_markup("<b>%s</b>" %("Mimetype"))
         mimetype_label.set_alignment(0, 0.5)
-        self.table.attach(mimetype_label, 2, 3, 6, 7, xpadding = 6, ypadding = 6)
+        self.table.attach(mimetype_label, 2, 3, 8, 9, xpadding = 6, ypadding = 6)
+
+        self.mime_entry = Gtk.Label()
+        self.mime_entry.set_alignment(0, 0.5)
+        self.table.attach(self.mime_entry, 3, 4, 8, 9, xpadding = 6, ypadding = 6)
 
         text_label = Gtk.Label()
         text_label.set_markup("<b>%s</b>" %("Text"))
         text_label.set_alignment(0, 0.5)
-        self.table.attach(text_label, 0, 1, 7, 8, xpadding = 6, ypadding = 6)
+        self.table.attach(text_label, 0, 1, 9, 10, xpadding = 6, ypadding = 6)
+
+        self.text_entry = Gtk.Label()
+        self.text_entry.set_alignment(0, 0.5)
+        self.table.attach(self.text_entry, 1, 2, 9, 10, xpadding = 6, ypadding =6)
 
         storage_label = Gtk.Label()
         storage_label.set_markup("<b>%s</b>" %("Storage"))
         storage_label.set_alignment(0, 0.5)
-        self.table.attach(storage_label, 2, 3, 7, 8, xpadding = 6, ypadding = 6)
+        self.table.attach(storage_label, 2, 3, 9, 10, xpadding = 6, ypadding = 6)
+        
+        self.storage_entry = Gtk.Label()
+        self.storage_entry.set_alignment(0, 0.5)
+        self.table.attach(self.storage_entry, 3, 4, 9, 10, xpadding = 6, ypadding = 6)
+
+
+    def map(self, event):
+        self.id_entry.set_text(str(event.get_id()))
+
+        timestamp = int(str(event.get_timestamp()))
+        time = datetime.fromtimestamp(timestamp/1000).strftime("%Y-%m-%d %I:%M:%S %p")
+        self.time_entry.set_text(time)
+        
+        self.event_int_entry.set_text(str(event.get_interpretation()))
+        self.event_manifes_entry.set_text(str(event.get_manifestation()))
+
+        actor = str(event.get_actor())
+        self.actor_entry.set_label(actor)
+
+        app_info = Gio.DesktopAppInfo.new(actor.replace("application://", ""))
+        self.image_entry.set_from_gicon(app_info.get_icon(), Gtk.IconSize.DIALOG)
+        self.actor_name_entry.set_text(app_info.get_display_name())
+
+        if len(event.subjects) > 0:
+            subj = event.subjects[0]
+
+            self.uri_entry.set_text(str(subj.get_uri()))
+            self.current_uri_entry.set_text(str(subj.get_current_uri()))
+
+            self.subj_int_entry.set_text(str(subj.get_interpretation()))
+            self.subj_manifes_entry.set_text(str(subj.get_manifestation()))
+
+            self.origin_entry.set_text(str(subj.get_origin()))
+            self.mime_entry.set_text(subj.get_mimetype())
+            try:
+                txt = str(subj.get_text())
+                self.text_entry.set_text(txt)
+            except:
+                #print unicode(subj.get_text().strip(codecs.BOM_UTF8), 'utf-8')
+                self.text_entry.set_text("")
+            self.storage_entry.set_text(str(subj.get_storage()))

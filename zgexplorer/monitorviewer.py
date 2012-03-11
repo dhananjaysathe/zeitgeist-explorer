@@ -94,6 +94,7 @@ class MonitorViewer(Gtk.VBox):
         # Event Id, TimeStamp, Interpretation, Manifestation, Actor
         self.store = Gtk.ListStore( int, str, str, str, str)
         self.treeview = Gtk.TreeView(self.store)
+        self.treeview.connect("cursor-changed", self.on_event_selected)
         self.scroll.add(self.treeview)
 
         column_id = Gtk.TreeViewColumn("ID")
@@ -178,3 +179,12 @@ class MonitorViewer(Gtk.VBox):
 
     def monitor_stop(self):
         self.stop_monitor(self.stop)
+
+    def on_event_selected(self, treeview):
+        selection = self.treeview.get_selection()
+        if selection is not None:
+            model, _iter = selection.get_selected()
+            if _iter is not None:
+                event_id = model.get(_iter, 0)[0]
+                event = self.events[event_id]
+                self.viewer.map(event)
