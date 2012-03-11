@@ -23,6 +23,7 @@ from gi.repository import Gtk, Pango
 
 from filtermanager import FilterManagerDialog
 from monitorviewer import MonitorViewer
+from zeitgeist.client import ZeitgeistClient
 
 class ExplorerMainWindow(Gtk.Window):
 
@@ -32,10 +33,10 @@ class ExplorerMainWindow(Gtk.Window):
         super(ExplorerMainWindow, self).__init__()
         self.connect("destroy", Gtk.main_quit)
         self.set_title("Zeitgeist Explorer")
-        self.set_size_request(1000, 800)
-        #self.spacing = 6
-        #self.margin = 12
+        self.set_size_request(1400, 900)
         
+        self.client = ZeitgeistClient()
+
         main_box = Gtk.VBox()
         main_box.spacing = 6
         main_box.margin = 12
@@ -65,7 +66,7 @@ class ExplorerMainWindow(Gtk.Window):
         self.notebook = Gtk.Notebook()
         main_box.pack_start(self.notebook, True, True, 12)
 
-        self.monitor_window = MonitorWindow()
+        self.monitor_window = MonitorWindow(self.client)
         self.notebook.append_page(self.monitor_window, Gtk.Label("Monitor Events"))
         self.explorer_window = ExplorerWindow()
         self.notebook.append_page(self.explorer_window, Gtk.Label("Explore Events"))
@@ -88,10 +89,11 @@ class MonitorWindow(Gtk.VBox):
     monitor_custom = {}
     selected_monitor_view = None
 
-    def __init__(self):
+    def __init__(self, zeitgeist_client):
         super(MonitorWindow, self).__init__()
 
         self.monitor_dialog = FilterManagerDialog()
+        self.client = zeitgeist_client
 
         self.hbox = Gtk.HBox()
         self.pack_start(self.hbox, True, True, 12)
@@ -154,7 +156,7 @@ class MonitorWindow(Gtk.VBox):
 
                 self.monitors.append([index, entry[0], is_predefined])
                 # Add it in the list of ids
-                monitor_inst = MonitorViewer()
+                monitor_inst = MonitorViewer(self.client)
                 monitor_inst.map(index, is_predefined)
                 if is_predefined:
                     self.monitor_builtin[index] = monitor_inst

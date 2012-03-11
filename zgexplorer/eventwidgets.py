@@ -186,3 +186,77 @@ class TemplateViewer(Gtk.VBox):
 
         self.mimetype_entry.set_text(subj.get_mimetype())
         self.storage_entry.set_text(subj.get_storage())
+
+class EventViewer(Gtk.VBox):
+
+    def __init__(self):
+        super(EventViewer, self).__init__()
+
+        self.table = Gtk.Table(18, 4, False)
+        self.pack_start(self.table, False, False, 6)
+        self.table.set_border_width(1)
+
+        id_label = Gtk.Label()
+        id_label.set_markup("<b>%s</b>" %("Event ID"))
+        id_label.set_alignment(0, 0.5)
+        self.table.attach(id_label, 0, 1, 0, 1, xpadding = 6, ypadding =6 )
+
+        time_label = Gtk.Label()
+        time_label.set_markup("<b>%s</b>" %("Timestamp"))
+        time_label.set_alignment(0, 0.5)
+        self.table.attach(time_label, 2, 3, 0, 1, xpadding = 6, ypadding = 6)
+
+        event_int_label = Gtk.Label()
+        event_int_label.set_markup("<b>%s</b>" %("Interpretation"))
+        event_int_label.set_alignment(0, 0.5)
+        self.table.attach(event_int_label, 0, 1, 1, 2, xpadding = 6, ypadding = 6)
+
+        event_manifes_label = Gtk.Label()
+        event_manifes_label.set_markup("<b>%s</b>" %("Manifestation"))
+        event_manifes_label.set_alignment(0, 0.5)
+        self.table.attach(event_manifes_label, 2, 3, 1, 2, xpadding = 6, ypadding = 6)
+
+        actor_label = Gtk.Label()
+        actor_label.set_markup("<b>%s</b>" %("Actor"))
+        actor_label.set_alignment(0, 0.5)
+        self.table.attach(actor_label, 0, 1, 2, 3, xpadding = 6, ypadding = 6)
+
+        uri_label = Gtk.Label()
+        uri_label.set_markup("<b>%s</b>" %("URI"))
+        uri_label.set_alignment(0, 0.5)
+        self.table.attach(uri_label, 0, 1, 3, 4, xpadding = 6, ypadding = 6)
+
+        current_uri_label = Gtk.Label()
+        current_uri_label.set_markup("<b>%s</b>" %("Current URI"))
+        current_uri_label.set_alignment(0, 0.5)
+        self.table.attach(current_uri_label, 0, 1, 4, 5, xpadding = 6, ypadding = 6)
+
+        subj_int_label = Gtk.Label()
+        subj_int_label.set_markup("<b>%s</b>" %("Interpretation"))
+        subj_int_label.set_alignment(0, 0.5)
+        self.table.attach(subj_int_label, 0, 1, 5, 6, xpadding = 6, ypadding = 6)
+
+        subj_manifes_label = Gtk.Label()
+        subj_manifes_label.set_markup("<b>%s</b>" %("Manifestation"))
+        subj_manifes_label.set_alignment(0, 0.5)
+        self.table.attach(subj_manifes_label, 2, 3, 5, 6, xpadding = 6, ypadding = 6)
+
+        origin_label = Gtk.Label()
+        origin_label.set_markup("<b>%s</b>" %("Origin"))
+        origin_label.set_alignment(0, 0.5)
+        self.table.attach(origin_label, 0, 1, 6, 7, xpadding = 6, ypadding = 6)
+
+        mimetype_label = Gtk.Label()
+        mimetype_label.set_markup("<b>%s</b>" %("Mimetype"))
+        mimetype_label.set_alignment(0, 0.5)
+        self.table.attach(mimetype_label, 2, 3, 6, 7, xpadding = 6, ypadding = 6)
+
+        text_label = Gtk.Label()
+        text_label.set_markup("<b>%s</b>" %("Text"))
+        text_label.set_alignment(0, 0.5)
+        self.table.attach(text_label, 0, 1, 7, 8, xpadding = 6, ypadding = 6)
+
+        storage_label = Gtk.Label()
+        storage_label.set_markup("<b>%s</b>" %("Storage"))
+        storage_label.set_alignment(0, 0.5)
+        self.table.attach(storage_label, 2, 3, 7, 8, xpadding = 6, ypadding = 6)
