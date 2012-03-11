@@ -21,11 +21,13 @@
 
 from gi.repository import Gtk, Pango
 
+from datetime import datetime
+
 from templates import BuiltInFilters
 from eventwidgets import EventViewer
 
 from zeitgeist.datamodel import Event, Subject, Interpretation, \
-    Manifestation, StorageState, ResultType
+    Manifestation, StorageState, ResultType, Symbol
 from zeitgeist.client import Monitor
 
 class MonitorViewer(Gtk.VBox):
@@ -35,6 +37,10 @@ class MonitorViewer(Gtk.VBox):
 
         self.client = zeitgeist_client
         self.monitor = None
+        # The Entry for this MonitorViewer
+        self.entry = None
+
+        self.events = {}
 
         self.spacing = 6
         self.margin = 12
@@ -84,18 +90,45 @@ class MonitorViewer(Gtk.VBox):
         self.scroll.set_border_width(1)
         self.pack_start(self.scroll, True, True, 6)
 
-        # Array Index, Event Id, TimeStamp, Interpretation, Manifestation
-        self.store = Gtk.ListStore(int, int, str, str, str)
+        # Event Id, TimeStamp, Interpretation, Manifestation, Actor
+        self.store = Gtk.ListStore( int, str, str, str, str)
         self.treeview = Gtk.TreeView(self.store)
         self.scroll.add(self.treeview)
 
         column_id = Gtk.TreeViewColumn("ID")
         self.treeview.append_column(column_id)
         id_rend = Gtk.CellRendererText()
-        id_rend.set_property("ellipsize", Pango.EllipsizeMode.END)
         column_id.pack_start(id_rend, False)
-        column_id.add_attribute(id_rend, "markup", 1)
+        column_id.add_attribute(id_rend, "markup", 0)
         column_id.set_resizable(True)
+
+        column_time = Gtk.TreeViewColumn("Timestamp")
+        self.treeview.append_column(column_time)
+        time_rend = Gtk.CellRendererText()
+        column_time.pack_start(time_rend, False)
+        column_time.add_attribute(time_rend, "markup", 1)
+        column_time.set_resizable(True)
+
+        column_inter = Gtk.TreeViewColumn("Interpretation")
+        self.treeview.append_column(column_inter)
+        inter_rend = Gtk.CellRendererText()
+        column_inter.pack_start(inter_rend, False)
+        column_inter.add_attribute(inter_rend, "markup", 2)
+        column_inter.set_resizable(True)
+
+        column_manif = Gtk.TreeViewColumn("Manifestation")
+        self.treeview.append_column(column_manif)
+        manif_rend = Gtk.CellRendererText()
+        column_manif.pack_start(manif_rend, False)
+        column_manif.add_attribute(manif_rend, "markup", 3)
+        column_manif.set_resizable(True)
+
+        column_actor = Gtk.TreeViewColumn("Actor")
+        self.treeview.append_column(column_actor)
+        actor_rend = Gtk.CellRendererText()
+        column_actor.pack_start(actor_rend, False)
+        column_actor.add_attribute(actor_rend, "markup", 4)
+        column_actor.set_resizable(True)
 
         self.viewer = EventViewer()
         self.pack_start(self.viewer, False, False, 6)
@@ -103,20 +136,36 @@ class MonitorViewer(Gtk.VBox):
         self.show_all()
 
     def map(self, index, is_predefined):
-        entry = self.builtin[index] if is_predefined else None
-        if entry is not None:
-            self.desc_entry.set_text(entry[1])
-
-
-        self.monitor = Monitor(entry[3], [entry[2]], self.monitor_insert, None)
+        self.entry = self.builtin[index] if is_predefined else None
+        if self.entry is not None:
+            self.desc_entry.set_text(self.entry[1])
 
     def monitor_insert(self, time_range, events):
+        for event in events:
+            self.events[event.get_id()] = event
+
+            timestamp = int(str(event.get_timestamp()))
+            time = datetime.fromtimestamp(timestamp/1000).strftime("%Y-%m-%d %I:%M:%S %p")
+            
+            actor = event.get_actor()
+
+            event_inter = str(event.get_interpretation())
+            interpretation = event_inter.split("#")[-1]
+            event_manifes = str(event.get_manifestation())
+            manifestation = event_manifes.split("#")[-1]
+
+            self.store.append([event.get_id(), time, interpretation, manifestation, actor])
+
+    def monitor_delete(self, time_range, event_ids):
         pass
 
     def start_monitor(self, button):
         self.start.set_sensitive(False)
         self.stop.set_sensitive(True)
+        self.monitor = self.client.install_monitor(self.entry[3], \
+            [self.entry[2]], self.monitor_insert, self.monitor_delete)
 
     def stop_monitor(self, button):
         self.start.set_sensitive(True)
         self.stop.set_sensitive(False)
+        self.client.remove_monitor(self.monitor)
