@@ -327,21 +327,30 @@ class EventViewer(Gtk.VBox):
 
 
     def map(self, event):
-        self.id_entry.set_text(str(event.get_id()))
+        try:
+            id_val = int(event.get_id())
+            self.id_entry.set_text(str(id_val) if id_val > 0 else "")
 
-        timestamp = int(str(event.get_timestamp()))
-        time = datetime.fromtimestamp(timestamp/1000).strftime("%Y-%m-%d %I:%M:%S %p")
-        self.time_entry.set_text(time)
-        
+            timestamp = int(str(event.get_timestamp()))
+            time = datetime.fromtimestamp(timestamp/1000).strftime("%Y-%m-%d %I:%M:%S %p")
+            self.time_entry.set_text(time if id_val > 0 else "")
+        except:
+            self.id_entry.set_text("")
+            self.time_entry.set_text("")
+
         self.event_int_entry.set_text(str(event.get_interpretation()))
         self.event_manifes_entry.set_text(str(event.get_manifestation()))
 
         actor = str(event.get_actor())
         self.actor_entry.set_label(actor)
 
-        app_info = Gio.DesktopAppInfo.new(actor.replace("application://", ""))
-        self.image_entry.set_from_gicon(app_info.get_icon(), Gtk.IconSize.DIALOG)
-        self.actor_name_entry.set_text(app_info.get_display_name())
+        if actor.startswith("application://"):
+            app_info = Gio.DesktopAppInfo.new(actor.replace("application://", ""))
+            self.image_entry.set_from_gicon(app_info.get_icon(), Gtk.IconSize.DIALOG)
+            self.actor_name_entry.set_text(app_info.get_display_name())
+        else:
+            self.image_entry.clear()
+            self.actor_name_entry.set_text("")
 
         if len(event.subjects) > 0:
             subj = event.subjects[0]

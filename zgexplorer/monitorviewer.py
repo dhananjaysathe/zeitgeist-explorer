@@ -79,11 +79,11 @@ class MonitorViewer(Gtk.VBox):
         self.stop.set_sensitive(False)
         self.button_box.pack_start(self.stop, False, False, 6)
 
-        self.edit = Gtk.Button()
-        self.edit.set_size_request(32, 32)
-        self.edit.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_EDIT,
+        self.clear = Gtk.Button()
+        self.clear.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_CLEAR,
                 Gtk.IconSize.BUTTON))
-        self.button_box.pack_start(self.edit, False, False, 6)
+        self.clear.connect("clicked", self.clear_events)
+        self.button_box.pack_start(self.clear, False, False, 6)
 
         self.scroll = Gtk.ScrolledWindow(None, None)
         self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -142,6 +142,14 @@ class MonitorViewer(Gtk.VBox):
         if self.entry is not None:
             self.desc_entry.set_text(self.entry[1])
 
+        if is_predefined is False:
+            self.edit = Gtk.Button()
+            self.edit.set_size_request(32, 32)
+            self.edit.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_EDIT,
+                    Gtk.IconSize.BUTTON))
+            self.button_box.pack_start(self.edit, False, False, 6)
+
+
     def monitor_insert(self, time_range, events):
         for event in events:
             self.events[event.get_id()] = event
@@ -161,6 +169,22 @@ class MonitorViewer(Gtk.VBox):
     def monitor_delete(self, time_range, event_ids):
         pass
 
+    def clear_events(self, button):
+        self.events.clear()
+        self.viewer.map(Event.new_for_values(subjects=[Subject()]))
+
+        model = self.treeview.get_model()
+        print type(model)
+        _iter = model.get_iter_first()
+        while _iter is not None:
+            print model.get(_iter, 0)[0]
+            self.store.remove(_iter)
+            _iter = model.iter_next(_iter)
+
+        _iter = model.get_iter_first()
+        if _iter is not None:
+            self.store.remove(_iter)
+
     def start_monitor(self, button):
         self.start.set_sensitive(False)
         self.stop.set_sensitive(True)
@@ -174,6 +198,9 @@ class MonitorViewer(Gtk.VBox):
         self.is_running = False
         self.client.remove_monitor(self.monitor)
 
+    def monitor_clear(self, button):
+        pass
+
     def is_monitor_running(self):
         return self.is_running
 
@@ -186,5 +213,6 @@ class MonitorViewer(Gtk.VBox):
             model, _iter = selection.get_selected()
             if _iter is not None:
                 event_id = model.get(_iter, 0)[0]
-                event = self.events[event_id]
-                self.viewer.map(event)
+                if self.events.has_key(event_id):
+                    event = self.events[event_id]
+                    self.viewer.map(event)
