@@ -36,27 +36,26 @@ class FilterManagerDialog(Gtk.Dialog):
         self.spacing = 6
         self.margin = 12
 
-        self.store = Gtk.ListStore(int, str)
-        self.builtin = BuiltInFilters()
-        for i in self.builtin:
-            self.store.append([i, self.builtin[i][0]])
-
         box = self.get_content_area() 
         
         self.notebook = Gtk.Notebook()
         box.pack_start(self.notebook, True, True, 0)
 
         self.add_predefined_tab()
+        self.add_custom_tab()
 
         box.show_all()
 
     def add_predefined_tab(self):
-        pass
         self.predefined_box = Gtk.VBox()
-        self.notebook.append_page(self.predefined_box, Gtk.Label("Predefined"))
+        self.notebook.append_page(self.predefined_box, Gtk.Label("Predefined Filter"))
         
         self.predefined_store = Gtk.ListStore(int, str)
-        self.predefined_view = Gtk.TreeView(self.store)
+        self.builtin = BuiltInFilters()
+        for i in self.builtin:
+            self.predefined_store.append([i, self.builtin[i][0]])
+
+        self.predefined_view = Gtk.TreeView(self.predefined_store)
         self.predefined_view.connect("cursor-changed", self.on_cursor_changed)
         column_pix_name = Gtk.TreeViewColumn(_('Name'))
         self.predefined_view.append_column(column_pix_name)
@@ -80,6 +79,39 @@ class FilterManagerDialog(Gtk.Dialog):
         self.predefined_viewer = TemplateViewer()
         self.predefined_viewer.set_fields_enable(False)
         self.predefined_box.pack_start(self.predefined_viewer, False, False, 0)
+
+    def add_custom_tab(self):
+        self.custom_box = Gtk.VBox()
+        self.notebook.append_page(self.custom_box, Gtk.Label("Custom Filter"))
+
+        self.custom_store = Gtk.ListStore(int, str)
+
+        self.custom_view = Gtk.TreeView(self.custom_store)
+        self.custom_view.connect("cursor-changed", self.on_custom_cursor_changed)
+
+        column_pix_name = Gtk.TreeViewColumn(_('Name'))
+        self.custom_view.append_column(column_pix_name)
+        name_rend = Gtk.CellRendererText()
+        name_rend.set_property("ellipsize", Pango.EllipsizeMode.END)
+        column_pix_name.pack_start(name_rend, False)
+        column_pix_name.add_attribute(name_rend, "markup", 1)
+        column_pix_name.set_resizable(True)
+
+        self.custom_view.set_headers_visible(False)
+        self.custom_view.set_rules_hint(True)
+        
+        self.custom_scroll = Gtk.ScrolledWindow()
+        self.custom_scroll.add(self.custom_view)
+        self.custom_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.custom_scroll.set_shadow_type(Gtk.ShadowType.IN)
+        self.custom_scroll.set_border_width(1)
+        self.custom_box.pack_start(self.custom_scroll, True, True, 6)
+        
+        # See the Template values
+        self.custom_viewer = TemplateViewer()
+        self.custom_viewer.set_fields_enable(False)
+        self.custom_box.pack_start(self.custom_viewer, False, False, 0)
+
 
     def get_selected_index(self):
         selection = self.predefined_view.get_selection()
@@ -110,3 +142,5 @@ class FilterManagerDialog(Gtk.Dialog):
         if index is not None:
             self.predefined_viewer.set_values(self.builtin[index]) 
 
+    def on_custom_cursor_changed(self, treeview):
+        pass

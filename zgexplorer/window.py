@@ -146,7 +146,6 @@ class MonitorWindow(Gtk.VBox):
 
     def on_add_clicked(self, button):
         res = self.monitor_dialog.run()
-        print (Gtk.ResponseType)(res)
         if res == Gtk.ResponseType.DELETE_EVENT or res == Gtk.ResponseType.CANCEL:
             self.monitor_dialog.hide()
             return
