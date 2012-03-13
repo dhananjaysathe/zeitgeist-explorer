@@ -42,59 +42,47 @@ class FilterManagerDialog(Gtk.Dialog):
             self.store.append([i, self.builtin[i][0]])
 
         box = self.get_content_area() 
+        
+        self.notebook = Gtk.Notebook()
+        box.pack_start(self.notebook, True, True, 0)
 
-        # Top Level Radio Button
-        radio_hbox = Gtk.HBox()
-        box.pack_start(radio_hbox, False, True, 6)
+        self.add_predefined_tab()
 
-        predefined_radio = Gtk.RadioButton()
-        predefined_radio.set_label("Predefined")
-        predefined_radio.connect("toggled", self.on_button_toggled, "1")
-        radio_hbox.pack_start(predefined_radio, False, False, 0)
+        box.show_all()
 
-        custom_radio = Gtk.RadioButton.new_from_widget(predefined_radio)
-        custom_radio.set_label("User Defined")
-        custom_radio.connect("toggled", self.on_button_toggled, "2")
-        radio_hbox.pack_start(custom_radio, False, False, 0)
-
-         
-        self.filter_view = Gtk.TreeView(self.store)
-        self.filter_view.connect("cursor-changed", self.on_cursor_changed)
+    def add_predefined_tab(self):
+        pass
+        self.predefined_box = Gtk.VBox()
+        self.notebook.append_page(self.predefined_box, Gtk.Label("Predefined"))
+        
+        self.predefined_store = Gtk.ListStore(int, str)
+        self.predefined_view = Gtk.TreeView(self.store)
+        self.predefined_view.connect("cursor-changed", self.on_cursor_changed)
         column_pix_name = Gtk.TreeViewColumn(_('Name'))
-        self.filter_view.append_column(column_pix_name)
+        self.predefined_view.append_column(column_pix_name)
         name_rend = Gtk.CellRendererText()
         name_rend.set_property("ellipsize", Pango.EllipsizeMode.END)
         column_pix_name.pack_start(name_rend, False)
         column_pix_name.add_attribute(name_rend, "markup", 1)
         column_pix_name.set_resizable(True)
 
-        self.filter_view.set_headers_visible(False)
-        self.filter_view.set_rules_hint(True)
-        #box.pack_start(self.filter_view, True, True, 0)
+        self.predefined_view.set_headers_visible(False)
+        self.predefined_view.set_rules_hint(True)
         
-        self.scroll = Gtk.ScrolledWindow()
-        self.scroll.add(self.filter_view)
-        self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.scroll.set_shadow_type(Gtk.ShadowType.IN)
-        self.scroll.set_border_width(1)
-        box.pack_start(self.scroll, True, True, 6)
+        self.predefined_scroll = Gtk.ScrolledWindow()
+        self.predefined_scroll.add(self.predefined_view)
+        self.predefined_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.predefined_scroll.set_shadow_type(Gtk.ShadowType.IN)
+        self.predefined_scroll.set_border_width(1)
+        self.predefined_box.pack_start(self.predefined_scroll, True, True, 6)
         
-        # Range
-        #self.timerange = TimeRangeViewer()
-        #box.pack_start(self.timerange, False, False, 0)
-
-        # Results Type
-        #restype_label = Gtk.Label("Result Type")
-
         # See the Template values
-        self.viewer = TemplateViewer()
-        self.viewer.set_fields_enable(False)
-        box.pack_start(self.viewer, False, False, 0)
-        
-        box.show_all()
+        self.predefined_viewer = TemplateViewer()
+        self.predefined_viewer.set_fields_enable(False)
+        self.predefined_box.pack_start(self.predefined_viewer, False, False, 0)
 
     def get_selected_index(self):
-        selection = self.filter_view.get_selection()
+        selection = self.predefined_view.get_selection()
         model, _iter = selection.get_selected()
         if _iter is not None:
             app_index = model.get(_iter, 0)
@@ -120,4 +108,5 @@ class FilterManagerDialog(Gtk.Dialog):
     def on_cursor_changed(self, treeview):
         index = self.get_selected_index()
         if index is not None:
-            self.viewer.set_values(self.builtin[index]) 
+            self.predefined_viewer.set_values(self.builtin[index]) 
+

@@ -146,10 +146,15 @@ class MonitorWindow(Gtk.VBox):
 
     def on_add_clicked(self, button):
         res = self.monitor_dialog.run()
-        self.monitor_dialog.hide()
+        print (Gtk.ResponseType)(res)
+        if res == Gtk.ResponseType.DELETE_EVENT or res == Gtk.ResponseType.CANCEL:
+            self.monitor_dialog.hide()
+            return
+
         if res == Gtk.ResponseType.OK:
             index, entry, is_predefined = self.monitor_dialog.get_selected_entry()
             if entry is not None:
+                self.monitor_dialog.hide()
                 if (is_predefined and index in self.monitor_builtin.keys()) or \
                     (not is_predefined and index in self.monitor_custom.keys()):
                     return
