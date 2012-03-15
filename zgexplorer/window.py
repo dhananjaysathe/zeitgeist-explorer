@@ -104,7 +104,7 @@ class MonitorWindow(Gtk.VBox):
         monitor_vbox = Gtk.VBox()
         list_vbox.pack_start(monitor_vbox, True, True, 0)
         self.monitors = Gtk.ListStore(int, str, bool)
-        self.monitor_tree = Gtk.TreeView(self.monitors)
+        self.monitor_tree = Gtk.TreeView(model=self.monitors)
         self.monitor_tree.connect("cursor-changed", self.on_treeview_selected)
         self.monitor_tree.set_size_request(200, 600)
         self.monitor_tree.set_border_width(1)
