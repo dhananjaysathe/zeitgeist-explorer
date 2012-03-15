@@ -79,7 +79,7 @@ class MonitorViewer(Gtk.VBox):
 
         # Event Id, TimeStamp, Interpretation, Manifestation, Actor
         self.store = Gtk.ListStore( int, str, str, str, str)
-        self.treeview = Gtk.TreeView(self.store)
+        self.treeview = Gtk.TreeView(model=self.store)
         self.treeview.connect("cursor-changed", self.on_event_selected)
         self.scroll.add(self.treeview)
 

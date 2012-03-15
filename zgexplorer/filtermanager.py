@@ -53,7 +53,7 @@ class FilterManagerDialog(Gtk.Dialog):
         for i in self.builtin:
             self.predefined_store.append([i, self.builtin[i][0]])
 
-        self.predefined_view = Gtk.TreeView(self.predefined_store)
+        self.predefined_view = Gtk.TreeView(model=self.predefined_store)
         self.predefined_view.connect("cursor-changed", self.on_cursor_changed)
         column_pix_name = Gtk.TreeViewColumn(_('Name'))
         self.predefined_view.append_column(column_pix_name)
@@ -80,7 +80,7 @@ class FilterManagerDialog(Gtk.Dialog):
 
         self.custom_store = Gtk.ListStore(int, str)
 
-        self.custom_view = Gtk.TreeView(self.custom_store)
+        self.custom_view = Gtk.TreeView(model=self.custom_store)
         self.custom_view.connect("cursor-changed", self.on_custom_cursor_changed)
 
         column_pix_name = Gtk.TreeViewColumn(_('Name'))
