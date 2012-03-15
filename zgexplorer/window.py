@@ -9,12 +9,12 @@
 # under the terms of the GNU Lesser General Public License as published
 # by the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
@@ -34,7 +34,7 @@ class ExplorerMainWindow(Gtk.Window):
         self.connect("destroy", Gtk.main_quit)
         self.set_title("Zeitgeist Explorer")
         self.set_size_request(1400, 900)
-        
+
         self.client = ZeitgeistClient()
 
         main_box = Gtk.VBox()
@@ -45,19 +45,15 @@ class ExplorerMainWindow(Gtk.Window):
         toolbar = Gtk.Toolbar()
 
         # New Tool Item
-        toolitem_new = Gtk.ToolButton()
-        toolitem_new.set_label("New")
-        toolitem_new.set_icon_name("add")
+        toolitem_new = Gtk.ToolButton(label="New",icon_name="add")
         toolitem_new.connect("clicked", self.toolitem_new_clicked)
         toolbar.insert(toolitem_new, -1)
 
         # Load Tool Item
-        toolitem_load = Gtk.ToolButton()
-        toolitem_load.set_stock_id(Gtk.STOCK_OPEN)
-        toolitem_load.set_label("Load")
-        toolitem_load.connect("clicked", self.toolitem_load_clicked) 
+        toolitem_load = Gtk.ToolButton(stock_id=Gtk.STOCK_OPEN,label="Load")
+        toolitem_load.connect("clicked", self.toolitem_load_clicked)
         toolbar.insert(toolitem_load, -1)
-        
+
         #main_box.pack_start(toolbar, False, True, 0)
 
         self.filter_manager = FilterManagerDialog()
@@ -84,7 +80,7 @@ class ExplorerMainWindow(Gtk.Window):
 
 
 class MonitorWindow(Gtk.VBox):
-    
+
     monitor_builtin = {}
     monitor_custom = {}
     selected_monitor_view = None
@@ -107,10 +103,8 @@ class MonitorWindow(Gtk.VBox):
         self.monitor_tree = Gtk.TreeView(self.monitors)
         self.monitor_tree.connect("cursor-changed", self.on_treeview_selected)
         self.monitor_tree.set_size_request(200, 600)
-        self.monitor_tree.set_border_width(1)
-        self.monitor_tree.set_visible(True)
-        self.monitor_tree.set_rules_hint(True)
-        self.monitor_tree.set_headers_visible(False)
+        self.monitor_tree.set_properties('border_width',1,'visible',True
+                            ,'rules_hint',True,'headers_visible',False)
 
         scroll = Gtk.ScrolledWindow(None, None)
         scroll.add(self.monitor_tree)
@@ -121,15 +115,13 @@ class MonitorWindow(Gtk.VBox):
 
         column_pix_name = Gtk.TreeViewColumn(_('Name'))
         self.monitor_tree.append_column(column_pix_name)
-        name_rend = Gtk.CellRendererText()
-        name_rend.set_property("ellipsize", Pango.EllipsizeMode.END)
+        name_rend = Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END)
         column_pix_name.pack_start(name_rend, False)
         column_pix_name.add_attribute(name_rend, "markup", 1)
         column_pix_name.set_resizable(True)
 
-        self.toolbar = Gtk.Toolbar()
+        self.toolbar = Gtk.Toolbar(icon_size=1)
         self.toolbar.set_style(Gtk.ToolbarStyle.ICONS)
-        self.toolbar.set_icon_size(1)
         self.toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_INLINE_TOOLBAR)
         self.toolbar.get_style_context().set_junction_sides(Gtk.JunctionSides.TOP)
         list_vbox.pack_start(self.toolbar, False, False, 0)
@@ -221,34 +213,27 @@ class ExplorerWindow(Gtk.VBox):
         super(ExplorerWindow, self).__init__()
 
 class ConfirmMonitorStop(Gtk.Dialog):
-    
+
     def __init__(self):
         super(ConfirmMonitorStop, self).__init__()
-        self.margin = 6
-        self.padding = 12
-        self.set_title("Confirm Monitor Stop")
-        self.set_resizable(False)
-        self.set_modal(True)
-        self.set_decorated(False)
+        self.set_properties('margin',6,'padding',12,'title',
+            "Confirm Monitor Stop",'resizable',False,'modal',True,'decorated',False)
         self.set_size_request(100, 50)
 
         self.add_button(Gtk.STOCK_YES, Gtk.ResponseType.YES)
         self.add_button(Gtk.STOCK_NO, Gtk.ResponseType.NO)
 
         box = self.get_content_area()
-        
-        label1 = Gtk.Label()
-        label1.set_markup("<b>%s</b>" 
+
+        label1 = Gtk.Label(xalign=0,yalign=0.5,margin_top=12,
+                            margin_right=12,margin_left=12)
+        label1.set_markup("<b>%s</b>"
         %("The monitor which you are trying to remove is still running"))
-        label1.set_alignment(0, 0.5)
-        label1.set_margin_top(12)
-        label1.set_margin_left(12)
-        label1.set_margin_right(12)
-        label2 = Gtk.Label()
+
+        label2 = Gtk.Label(xalign=0,yalign=0.5,margin_top=12,
+                            margin_right=12,margin_left=12)
         label2.set_markup("Going ahead will stop the monitor before removing it")
-        label2.set_alignment(0, 0.5)
-        label2.set_margin_left(12)
-        label2.set_margin_right(12)
+
         box.pack_start(label1, False, False, 6)
         box.pack_start(label2, False, False, 6)
 

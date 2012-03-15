@@ -9,12 +9,12 @@
 # under the terms of the GNU Lesser General Public License as published
 # by the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
@@ -45,50 +45,36 @@ class MonitorViewer(Gtk.VBox):
 
         self.spacing = 6
         self.margin = 12
-        
+
         self.builtin = BuiltInFilters()
 
-        #desc_label = Gtk.Label()
-        #desc_label.set_alignment(0, 0)
-        #desc_label.set_markup("<b>%s</b>" %("Description"))
-        #self.pack_start(desc_label, False, False, 6)
-
-        self.desc_entry = Gtk.Label()
-        self.desc_entry.set_alignment(0, 0)
-        self.desc_entry.set_line_wrap(True)
-        self.desc_entry.set_line_wrap_mode(Pango.WrapMode.WORD)
+        self.desc_entry = Gtk.Label(xalign=0,yalign=0,wrap=True)
         self.pack_start(self.desc_entry, False, False, 6)
 
 
         # ButtonBox
-        self.button_box = Gtk.HButtonBox()
-        self.button_box.set_homogeneous(False)
+        self.button_box = Gtk.HButtonBox(False)
         self.button_box.set_layout(Gtk.ButtonBoxStyle.START)
         self.pack_start(self.button_box, False, False, 6)
 
-        self.start = Gtk.Button()
-        self.start.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_MEDIA_PLAY, 
-                Gtk.IconSize.BUTTON))
+        self.start = Gtk.Button(image=Gtk.Image.new_from_stock(
+            Gtk.STOCK_MEDIA_PLAY,Gtk.IconSize.BUTTON))
         self.start.connect("clicked", self.start_monitor)
         self.button_box.pack_start(self.start, False, False, 6)
 
-        self.stop = Gtk.Button()
-        self.stop.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_MEDIA_STOP,
-                Gtk.IconSize.BUTTON))
+        self.stop = Gtk.Button(image= Gtk.Image.new_from_stock(
+            Gtk.STOCK_MEDIA_STOP,Gtk.IconSize.BUTTON))
         self.stop.connect("clicked", self.stop_monitor)
         self.stop.set_sensitive(False)
         self.button_box.pack_start(self.stop, False, False, 6)
 
-        self.clear = Gtk.Button()
-        self.clear.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_CLEAR,
-                Gtk.IconSize.BUTTON))
+        self.clear = Gtk.Button(image=Gtk.Image.new_from_stock(
+            Gtk.STOCK_CLEAR,Gtk.IconSize.BUTTON))
         self.clear.connect("clicked", self.clear_events)
         self.button_box.pack_start(self.clear, False, False, 6)
 
-        self.scroll = Gtk.ScrolledWindow(None, None)
+        self.scroll = Gtk.ScrolledWindow(None, None,border_width=1,shadow_type=Gtk.ShadowType.IN)
         self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.scroll.set_shadow_type(Gtk.ShadowType.IN)
-        self.scroll.set_border_width(1)
         self.pack_start(self.scroll, True, True, 6)
 
         # Event Id, TimeStamp, Interpretation, Manifestation, Actor
@@ -156,7 +142,7 @@ class MonitorViewer(Gtk.VBox):
 
             timestamp = int(str(event.get_timestamp()))
             time = datetime.fromtimestamp(timestamp/1000).strftime("%Y-%m-%d %I:%M:%S %p")
-            
+
             actor = event.get_actor()
 
             event_inter = str(event.get_interpretation())
