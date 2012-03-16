@@ -33,7 +33,7 @@ class ExplorerMainWindow(Gtk.Window):
         super(ExplorerMainWindow, self).__init__()
         self.connect("destroy", Gtk.main_quit)
         self.set_title("Zeitgeist Explorer")
-        self.set_size_request(1400, 900)
+        self.set_default_size(800, 600)
 
         self.client = ZeitgeistClient()
 
