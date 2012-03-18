@@ -23,43 +23,140 @@ import codecs
 from datetime import datetime
 from gi.repository import Gtk, Gio
 from zeitgeist.datamodel import Event, Subject, Manifestation, \
-    Interpretation, StorageState, Symbol
+    Interpretation, StorageState, Symbol, ResultType
 
 class TimeRangeViewer(Gtk.VBox):
     def __init__(self):
         super(TimeRangeViewer, self).__init__()
 
-        timerange_label = Gtk.Label("Time Range")
-        self.pack_start(timerange_label,False,False,12)
+        timerange_label = Gtk.Label("Time Range",xalign=0 ,yalign=0.5)
+        self.pack_start(timerange_label,False,False,3)
 
-        self.always_radio = Gtk.RadioButton(label= "Always",margin_left= 24)
-        self.pack_start(self.always_radio,False,False,12)
+        self.always_radio = Gtk.RadioButton(label= "Always",margin_left= 12)
+        self.pack_start(self.always_radio,False,False,3)
 
-        self.custom_radio = Gtk.RadioButton(label= "Custom",margin_left= 24)
+        self.custom_radio = Gtk.RadioButton(label= "Custom",margin_left= 12)
         self.custom_radio.join_group(self.always_radio)
-        self.pack_start(self.custom_radio,False,False,12)
+        self.pack_start(self.custom_radio,False,False,3)
+
+        enteries_box = Gtk.VBox(margin_left=14)
+        self.pack_start(enteries_box,False,False,3)
+
+        self.start_time = DatetimePicker()
+        self.end_time = DatetimePicker()
+
+        enteries_box.pack_start(Gtk.Label('From :',xalign=0 ,yalign=0.5),False,False,1)
+        enteries_box.pack_start(self.start_time,False,False,1)
+        enteries_box.pack_start(Gtk.Label('To :',xalign=0 ,yalign=0.5),False,False,1)
+        enteries_box.pack_start(self.end_time,False,False,1)
+
+    def get_start_time(self):
+        return self.start_time.get_datetime()
+
+    def get_end_time(self):
+        return self.end_time.get_datetime()
 
 
-class TemplateViewer(Gtk.VBox):
+class DatetimePicker(Gtk.HBox):
     def __init__(self):
-       super(TemplateViewer, self).__init__()
+        super(DatetimePicker, self).__init__()
+        time = datetime.now()
 
-       self.table = Gtk.Table(10, 2, False,border_width=1)
-       self.pack_start(self.table, True, True, 0)
+        #date
+        date_holder = Gtk.HBox()
+        self.pack_start(date_holder,False,False,6)
+        date_holder.pack_start(Gtk.Label('DD|MM|YY :'),False,False,6)
+        self.date_spin_day = Gtk.SpinButton(numeric=True)
+        self.date_spin_day.set_adjustment(Gtk.Adjustment(lower=1,
+                 upper=32,page_size=1,step_increment=1,value=time.day))
+        date_holder.pack_start(self.date_spin_day,False,False,0)
+        self.date_spin_month = Gtk.SpinButton(numeric=True)
+        self.date_spin_month.set_adjustment(Gtk.Adjustment(lower=1,
+                upper=13,page_size=1,step_increment=1,value=time.month))
+        date_holder.pack_start(self.date_spin_month,False,False,0)
+        self.date_spin_year = Gtk.SpinButton(numeric=True)
+        self.date_spin_year.set_adjustment(Gtk.Adjustment(lower=2010,
+               upper=2100,page_size=1,step_increment=1,value=time.year))
+        date_holder.pack_start(self.date_spin_year,False,False,0)
+
+        #time
+        time_holder = Gtk.HBox()
+        self.pack_end(time_holder,False,False,6)
+        time_holder.pack_start(Gtk.Label('HH:MM:SS '),False,False,6)
+        self.time_spin_hour = Gtk.SpinButton(numeric=True)
+        self.time_spin_hour.set_adjustment(Gtk.Adjustment(lower=0,
+                 upper=24,page_size=1,step_increment=1,value=time.hour))
+        time_holder.pack_start(self.time_spin_hour,False,False,0)
+        self.time_spin_min = Gtk.SpinButton(numeric=True)
+        self.time_spin_min.set_adjustment(Gtk.Adjustment(lower=0,
+               upper=60,page_size=1,step_increment=1,value=time.minute))
+        time_holder.pack_start(self.time_spin_min,False,False,0)
+        self.time_spin_sec = Gtk.SpinButton(numeric=True)
+        self.time_spin_sec.set_adjustment(Gtk.Adjustment(lower=0,
+               upper=60,page_size=1,step_increment=1,value=time.second))
+        time_holder.pack_start(self.time_spin_sec,False,False,0)
+
+        self.show_all()
+
+    def get_datetime(self):
+        return datetime(self.date_spin_year.get_valuea_as_int(),
+                        self.date_spin_month.get_valuea_as_int(),
+                        self.date_spin_day.get_valuea_as_int(),
+                        self.date_spin_hour.get_valuea_as_int(),
+                        self.date_spin_min.get_valuea_as_int(),
+                        self.date_spin_sec.get_valuea_as_int())
+
+
+
+
+
+
+class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
+    def __init__(self):
+       super(TemplateEditor, self).__init__()
+
+       outer = self.get_content_area()
+       frame = Gtk.Frame(shadow_type=Gtk.ShadowType.ETCHED_IN,border_width=5)
+       outer.add(frame)
+       box= Gtk.VBox()
+       frame.add(box)
+
+       self.timerange = TimeRangeViewer()
+       box.pack_start(self.timerange,False,False,0)
+       
+       table = Gtk.Table(1,2,True)
+       box.pack_start(table,False,False,0)
+       
+       label = Gtk.Label('Result Type :',xalign=0,yalign=0.5)
+       table.attach(label, 0, 1, 0, 1, xpadding=6 ,ypadding=6)
+       self.result_type = Gtk.ComboBoxText()
+       table.attach(self.result_type, 1, 2, 0, 1, xpadding=6 ,ypadding=6)
+       for entry in dir(ResultType)[:-1]:
+           if not ( entry.startswith('__')):
+              self.result_type.append_text(entry)
+       
+       self.table = Gtk.Table(10, 2, False,border_width=5)
+       box.pack_start(self.table, True, True, 0)
 
        event_label = Gtk.Label()
-       event_label.set_markup("Event")
+       event_label.set_markup("<b>%s</b>" %("Event"))
 
        # Event Interpretation
-       event_inter_label = Gtk.Label("Interpretation")
-       self.event_inter_entry = Gtk.Entry(width_chars=40)
+       event_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
+       self.event_inter_field = Gtk.ComboBoxText()
+       for entry in dir(Interpretation)[:-1]:
+           if not ( entry.startswith('__')):
+              self.event_inter_field.append_text(entry)
 
        # Event Manifesation
-       event_manifes_label = Gtk.Label("Manifestation")
-       self.event_manifes_entry = Gtk.Entry(width_chars=40)
+       event_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
+       self.event_manifes_field = Gtk.ComboBoxText()
+       for entry in dir(Manifestation)[:-1]:
+           if not ( entry.startswith('__')):
+              self.event_manifes_field.append_text(entry)
 
-       actor_label = Gtk.Label("Actor")
-       self.actor_entry = Gtk.Entry(width_chars=40)
+       actor_label = Gtk.Label("Actor :",xalign=0,yalign=0.5)
+       self.actor_field = Gtk.Label("")
 
        actor_hbox = Gtk.HBox(margin_bottom=6)
        self.actor_button = Gtk.Button()
@@ -69,77 +166,170 @@ class TemplateViewer(Gtk.VBox):
        actor_hbox.pack_start(self.actor_value, False, False, 12)
 
        subj_label = Gtk.Label()
-       subj_label.set_markup("Subject")
+       subj_label.set_markup("<b>%s</b>" %("Subject"))
+       
+       # URI
+       uri_label = Gtk.Label("URI :",xalign=0,yalign=0.5)
+       self.uri_field = Gtk.Entry(width_chars= 40)
+       
+       # Current URI
+       curr_uri_label = Gtk.Label("Current URI :",xalign=0,yalign=0.5)
+       self.curr_uri_field = Gtk.Entry(width_chars= 40)
 
 
        # Subject Interpretation
-       subj_inter_label = Gtk.Label("Interpretation")
-       self.subj_inter_entry = Gtk.Entry(width_chars=40)
+       subj_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
+       self.subj_inter_field = Gtk.ComboBoxText()
+       for entry in dir(Interpretation)[:-1]:
+           if not ( entry.startswith('__')):
+              self.subj_inter_field.append_text(entry)
 
        # Subject Manifesation
-       subj_manifes_label = Gtk.Label("Manifestation")
-       self.subj_manifes_entry = Gtk.Entry(width_chars=40)
+       subj_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
+       self.subj_manifes_field = Gtk.ComboBoxText()
+       for entry in dir(Manifestation)[:-1]:
+           if not ( entry.startswith('__')):
+              self.subj_manifes_field.append_text(entry)
 
+       # Origin
+       origin_label = Gtk.Label("Origin :",xalign=0,yalign=0.5)
+       self.origin_field = Gtk.Entry(width_chars= 40)
+       
        # Mimetype
-       mimetype_label = Gtk.Label("Mimetype")
-       self.mimetype_entry = Gtk.Entry(width_chars=40)
+       mimetype_label = Gtk.Label("Mimetype :",xalign=0,yalign=0.5)
+       self.mimetype_field = Gtk.Entry(width_chars= 40)
 
        # Storage
-       storage_label = Gtk.Label("Storage")
-       self.storage_entry = Gtk.Entry(width_chars=40)
+       storage_label = Gtk.Label("Storage :",xalign=0,yalign=0.5)
+       self.storage_field = Gtk.ComboBoxText()
+       for entry in dir(StorageState)[:-1]:
+           if not ( entry.startswith('__')):
+              self.storage_field.append_text(entry)
 
        attach_list = (
             (event_label,(0, 2, 0, 1)),
             (event_inter_label,(0, 1, 1, 2)),
-            (self.event_inter_entry,(1, 2, 1, 2)),
+            (self.event_inter_field,(1, 2, 1, 2)),
             (event_manifes_label,(0, 1, 2, 3)),
-            (self.event_manifes_entry,(1, 2, 2, 3)),
+            (self.event_manifes_field,(1, 2, 2, 3)),
             (actor_label,(0, 1, 3, 4)),
-            (self.actor_entry,(1, 2, 3, 4)),
+            (self.actor_field,(1, 2, 3, 4)),
             (actor_hbox,(1, 2, 4, 5)),
             (subj_label,(0, 2, 5, 6)),
-            (subj_inter_label,(0, 1, 6, 7)),
-            (self.subj_inter_entry,(1, 2, 6, 7)),
-            (subj_manifes_label,(0, 1, 7, 8)),
-            (self.subj_manifes_entry,(1, 2, 7, 8)),
-            (mimetype_label,(0, 1, 8, 9)),
-            (self.mimetype_entry,(1, 2, 8, 9)),
-            (storage_label,(0, 1, 9, 10)),
-            (self.storage_entry,(1, 2, 9, 10))
+            (uri_label,(0, 1, 6, 7)),
+            (self.uri_field,(1, 2, 6, 7)),
+            (curr_uri_label,(0, 1, 7, 8)),
+            (self.curr_uri_field,(1, 2, 7, 8)),
+            (subj_inter_label,(0, 1, 8, 9)),
+            (self.subj_inter_field,(1, 2, 8, 9)),
+            (subj_manifes_label,(0, 1, 9, 10)),
+            (self.subj_manifes_field,(1, 2, 9,10)),
+            (origin_label,(0, 1, 10, 11)),
+            (self.origin_field,(1, 2, 10, 11)),
+            (mimetype_label,(0, 1, 11, 12)),
+            (self.mimetype_field,(1, 2, 11, 12)),
+            (storage_label,(0, 1, 12, 13)),
+            (self.storage_field,(1, 2, 12, 13))
         )
        for widget_entry in attach_list :
            widget,pos = widget_entry
-           self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=6, ypadding=6)
+           self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=3, ypadding=3)
+
+
+
+class TemplateViewer(Gtk.VBox):
+    def __init__(self):
+       super(TemplateViewer, self).__init__()
+
+       self.table = Gtk.Table(10, 2, True,border_width=10)
+       self.pack_start(self.table, True, True, 0)
+
+       event_label = Gtk.Label()
+       event_label.set_markup("<b>%s</b>" %("Event"))
+
+       # Event Interpretation
+       event_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
+       self.event_inter_field = Gtk.Label("")
+
+       # Event Manifesation
+       event_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
+       self.event_manifes_field = Gtk.Label("")
+
+       actor_label = Gtk.Label("Actor :",xalign=0,yalign=0.5)
+       self.actor_field = Gtk.Label("")
+
+       actor_hbox = Gtk.HBox(margin_bottom=6)
+       self.actor_button = Gtk.Button()
+       self.actor_button.set_size_request(32, 32)
+       actor_hbox.pack_start(self.actor_button, False, False, 12)
+       self.actor_value = Gtk.Label()
+       actor_hbox.pack_start(self.actor_value, False, False, 12)
+
+       subj_label = Gtk.Label()
+       subj_label.set_markup("<b>%s</b>" %("Subject"))
+
+
+       # Subject Interpretation
+       subj_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
+       self.subj_inter_field = Gtk.Label("")
+
+       # Subject Manifesation
+       subj_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
+       self.subj_manifes_field = Gtk.Label("")
+
+       # Mimetype
+       mimetype_label = Gtk.Label("Mimetype :",xalign=0,yalign=0.5)
+       self.mimetype_field = Gtk.Label("")
+
+       # Storage
+       storage_label = Gtk.Label("Storage :",xalign=0,yalign=0.5)
+       self.storage_field = Gtk.Label("")
+
+       attach_list = (
+            (event_label,(0, 2, 0, 1)),
+            (event_inter_label,(0, 1, 1, 2)),
+            (self.event_inter_field,(1, 2, 1, 2)),
+            (event_manifes_label,(0, 1, 2, 3)),
+            (self.event_manifes_field,(1, 2, 2, 3)),
+            (actor_label,(0, 1, 3, 4)),
+            (self.actor_field,(1, 2, 3, 4)),
+            (actor_hbox,(1, 2, 4, 5)),
+            (subj_label,(0, 2, 5, 6)),
+            (subj_inter_label,(0, 1, 6, 7)),
+            (self.subj_inter_field,(1, 2, 6, 7)),
+            (subj_manifes_label,(0, 1, 7, 8)),
+            (self.subj_manifes_field,(1, 2, 7, 8)),
+            (mimetype_label,(0, 1, 8, 9)),
+            (self.mimetype_field,(1, 2, 8, 9)),
+            (storage_label,(0, 1, 9, 10)),
+            (self.storage_field,(1, 2, 9, 10))
+        )
+       for widget_entry in attach_list :
+           widget,pos = widget_entry
+           self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=3, ypadding=3)
 
     def set_fields_enable(self, enable):
-        self.event_inter_entry.set_sensitive(enable)
-        self.event_manifes_entry.set_sensitive(enable)
-        self.actor_entry.set_sensitive(enable)
         self.actor_button.set_sensitive(enable)
-        self.subj_inter_entry.set_sensitive(enable)
-        self.subj_manifes_entry.set_sensitive(enable)
-        self.mimetype_entry.set_sensitive(enable)
-        self.storage_entry.set_sensitive(enable)
 
     def set_values(self, values):
         ev = values[2]
 
         # Event Interpretation
         ev_inter = ev.get_interpretation()
-        self.event_inter_entry.set_text(ev_inter.name \
+        self.event_inter_field.set_text(ev_inter.name \
                 if type(ev_inter) is Symbol else "")
-        self.event_inter_entry.set_tooltip_text(ev_inter.doc \
+        self.event_inter_field.set_tooltip_text(ev_inter.doc \
                 if type(ev_inter) is Symbol else "")
 
         # Event Manifestation
         ev_manifes = ev.get_manifestation()
-        self.event_manifes_entry.set_text(ev_manifes.name \
+        self.event_manifes_field.set_text(ev_manifes.name \
                 if type(ev_manifes) is Symbol else "")
-        self.event_manifes_entry.set_tooltip_text(ev_manifes.doc \
+        self.event_manifes_field.set_tooltip_text(ev_manifes.doc \
                 if type(ev_manifes) is Symbol else "")
 
         actor = ev.get_actor()
-        self.actor_entry.set_text(actor)
+        self.actor_field.set_text(actor)
         if actor is not "" and actor.startswith("application://"):
             actor =  actor.replace("application://", "")
             try:
@@ -161,20 +351,20 @@ class TemplateViewer(Gtk.VBox):
 
         # Subject Interpretation
         subj_inter =  subj.get_interpretation()
-        self.subj_inter_entry.set_text(subj_inter.name \
+        self.subj_inter_field.set_text(subj_inter.name \
                 if type(subj_inter) is Symbol else "")
-        self.subj_inter_entry.set_tooltip_text(subj_inter.doc \
+        self.subj_inter_field.set_tooltip_text(subj_inter.doc \
                 if type(subj_inter) is Symbol else "")
 
         # Event Manifestation
         subj_manifes =  subj.get_manifestation()
-        self.subj_manifes_entry.set_text(subj_manifes.name
+        self.subj_manifes_field.set_text(subj_manifes.name
                 if type(subj_manifes) is Symbol else "")
-        self.subj_manifes_entry.set_tooltip_text(subj_manifes.doc \
+        self.subj_manifes_field.set_tooltip_text(subj_manifes.doc \
                 if type(subj_manifes) is Symbol else "")
 
-        self.mimetype_entry.set_text(subj.get_mimetype())
-        self.storage_entry.set_text(subj.get_storage())
+        self.mimetype_field.set_text(subj.get_mimetype())
+        self.storage_field.set_text(subj.get_storage())
 
 class EventViewer(Gtk.VBox):
 

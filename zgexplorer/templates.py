@@ -56,9 +56,9 @@ class BuiltInFilters(dict):
                    template4, \
                    TimeRange.always(), \
                    ResultType.MostRecentEvents]
-        template5 = Event.new_for_values(actor = "application://firefox.desktop")
-        self[4] = ["Firefox events", \
-                   "All the Firefox related events", \
+        template5 = Event.new_for_values(actor = "application://banshee.desktop")
+        self[4] = ["Banshee events", \
+                   "All the Banshee related events", \
                    template5, \
                    TimeRange.always(), \
                    ResultType.MostRecentEvents]
