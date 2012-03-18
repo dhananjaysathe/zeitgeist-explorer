@@ -4,6 +4,7 @@
 # Zeitgeist Explorer
 #
 # Copyright © 2012 Manish Sinha <manishsinha@ubuntu.com>
+# Copyright © 2012 Dhananjay Sathe <dhananjaysathe@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
@@ -24,6 +25,7 @@ from datetime import datetime
 from gi.repository import Gtk, Gio
 from zeitgeist.datamodel import Event, Subject, Manifestation, \
     Interpretation, StorageState, Symbol, ResultType
+from lookupdata import *
 
 class TimeRangeViewer(Gtk.VBox):
     def __init__(self):
@@ -123,18 +125,18 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
 
        self.timerange = TimeRangeViewer()
        box.pack_start(self.timerange,False,False,0)
-       
+
        table = Gtk.Table(1,2,True)
        box.pack_start(table,False,False,0)
-       
+
        label = Gtk.Label('Result Type :',xalign=0,yalign=0.5)
        table.attach(label, 0, 1, 0, 1, xpadding=6 ,ypadding=6)
-       self.result_type = Gtk.ComboBoxText()
+       self.result_type = Gtk.ComboBoxText(active=28)
        table.attach(self.result_type, 1, 2, 0, 1, xpadding=6 ,ypadding=6)
        for entry in dir(ResultType)[:-1]:
            if not ( entry.startswith('__')):
               self.result_type.append_text(entry)
-       
+
        self.table = Gtk.Table(10, 2, False,border_width=5)
        box.pack_start(self.table, True, True, 0)
 
@@ -144,16 +146,14 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
        # Event Interpretation
        event_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
        self.event_inter_field = Gtk.ComboBoxText()
-       for entry in dir(Interpretation)[:-1]:
-           if not ( entry.startswith('__')):
-              self.event_inter_field.append_text(entry)
+       for entry in event_interpretations.keys():
+           self.event_inter_field.append_text(entry)
 
        # Event Manifesation
        event_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
        self.event_manifes_field = Gtk.ComboBoxText()
-       for entry in dir(Manifestation)[:-1]:
-           if not ( entry.startswith('__')):
-              self.event_manifes_field.append_text(entry)
+       for entry in event_manifestations.keys():
+          self.event_manifes_field.append_text(entry)
 
        actor_label = Gtk.Label("Actor :",xalign=0,yalign=0.5)
        self.actor_field = Gtk.Label("")
@@ -167,11 +167,11 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
 
        subj_label = Gtk.Label()
        subj_label.set_markup("<b>%s</b>" %("Subject"))
-       
+
        # URI
        uri_label = Gtk.Label("URI :",xalign=0,yalign=0.5)
        self.uri_field = Gtk.Entry(width_chars= 40)
-       
+
        # Current URI
        curr_uri_label = Gtk.Label("Current URI :",xalign=0,yalign=0.5)
        self.curr_uri_field = Gtk.Entry(width_chars= 40)
@@ -180,21 +180,19 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
        # Subject Interpretation
        subj_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
        self.subj_inter_field = Gtk.ComboBoxText()
-       for entry in dir(Interpretation)[:-1]:
-           if not ( entry.startswith('__')):
-              self.subj_inter_field.append_text(entry)
+       for entry in subject_interpretations.keys():
+           self.subj_inter_field.append_text(entry)
 
        # Subject Manifesation
        subj_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
        self.subj_manifes_field = Gtk.ComboBoxText()
-       for entry in dir(Manifestation)[:-1]:
-           if not ( entry.startswith('__')):
+       for entry in subject_manifestations.keys():
               self.subj_manifes_field.append_text(entry)
 
        # Origin
        origin_label = Gtk.Label("Origin :",xalign=0,yalign=0.5)
        self.origin_field = Gtk.Entry(width_chars= 40)
-       
+
        # Mimetype
        mimetype_label = Gtk.Label("Mimetype :",xalign=0,yalign=0.5)
        self.mimetype_field = Gtk.Entry(width_chars= 40)
