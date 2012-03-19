@@ -22,6 +22,7 @@
 
 from zeitgeist import datamodel
 event_interpretations = {
+ '':'',
  'ACCEPT_EVENT': datamodel.Interpretation.ACCEPT_EVENT,
  'ACCESS_EVENT': datamodel.Interpretation.ACCESS_EVENT,
  'CREATE_EVENT': datamodel.Interpretation.CREATE_EVENT,
@@ -37,6 +38,7 @@ event_interpretations = {
 }
 
 event_manifestations = {
+ '':'',
  'HEURISTIC_ACTIVITY': datamodel.Manifestation.HEURISTIC_ACTIVITY,
  'SCHEDULED_ACTIVITY': datamodel.Manifestation.SCHEDULED_ACTIVITY,
  'USER_ACTIVITY': datamodel.Manifestation.USER_ACTIVITY,
@@ -44,6 +46,7 @@ event_manifestations = {
 }
 
 subject_interpretations = {
+ '':'',
  'ALARM': datamodel.Interpretation.ALARM,
  'APPLICATION': datamodel.Interpretation.APPLICATION,
  'ARCHIVE': datamodel.Interpretation.ARCHIVE,
@@ -102,6 +105,7 @@ subject_interpretations = {
 }
 
 subject_manifestations = {
+ '':'',
  'ARCHIVE_ITEM': datamodel.Manifestation.ARCHIVE_ITEM,
  'ATTACHMENT': datamodel.Manifestation.ATTACHMENT,
  'CALENDAR_DATA_OBJECT': datamodel.Manifestation.CALENDAR_DATA_OBJECT,
@@ -122,4 +126,11 @@ subject_manifestations = {
  'SYSTEM_NOTIFICATION': datamodel.Manifestation.SYSTEM_NOTIFICATION,
  'USER_ACTIVITY': datamodel.Manifestation.USER_ACTIVITY,
  'WORLD_ACTIVITY': datamodel.Manifestation.WORLD_ACTIVITY
+}
+
+storage_states = {
+ '':'',
+ 'Any':datamodel.StorageState.Any,
+ 'Available':datamodel.StorageState.Available,
+ 'NotAvailable':datamodel.StorageState.NotAvailable
 }

@@ -36,6 +36,7 @@ class TimeRangeViewer(Gtk.VBox):
 
         self.always_radio = Gtk.RadioButton(label= "Always",margin_left= 12)
         self.pack_start(self.always_radio,False,False,3)
+        self.always_radio.connect('toggled',self.update_sensitivity)
 
         self.custom_radio = Gtk.RadioButton(label= "Custom",margin_left= 12)
         self.custom_radio.join_group(self.always_radio)
@@ -46,6 +47,8 @@ class TimeRangeViewer(Gtk.VBox):
 
         self.start_time = DatetimePicker()
         self.end_time = DatetimePicker()
+        self.start_time.update_sensitivity(False)
+        self.end_time.update_sensitivity(False)
 
         enteries_box.pack_start(Gtk.Label('From :',xalign=0 ,yalign=0.5),False,False,1)
         enteries_box.pack_start(self.start_time,False,False,1)
@@ -57,6 +60,14 @@ class TimeRangeViewer(Gtk.VBox):
 
     def get_end_time(self):
         return self.end_time.get_datetime()
+
+    def update_sensitivity(self,widget):
+        enable = not self.always_radio.get_active()
+        self.start_time.update_sensitivity(enable)
+        self.end_time.update_sensitivity(enable)
+
+
+
 
 
 class DatetimePicker(Gtk.HBox):
@@ -104,9 +115,17 @@ class DatetimePicker(Gtk.HBox):
         return datetime(self.date_spin_year.get_valuea_as_int(),
                         self.date_spin_month.get_valuea_as_int(),
                         self.date_spin_day.get_valuea_as_int(),
-                        self.date_spin_hour.get_valuea_as_int(),
-                        self.date_spin_min.get_valuea_as_int(),
-                        self.date_spin_sec.get_valuea_as_int())
+                        self.time_spin_hour.get_valuea_as_int(),
+                        self.time_spin_min.get_valuea_as_int(),
+                        self.time_spin_sec.get_valuea_as_int())
+
+    def update_sensitivity(self,enable):
+        self.date_spin_year.set_sensitive(enable)
+        self.date_spin_month.set_sensitive(enable)
+        self.date_spin_day.set_sensitive(enable)
+        self.time_spin_hour.set_sensitive(enable)
+        self.time_spin_min.set_sensitive(enable)
+        self.time_spin_sec.set_sensitive(enable)
 
 
 
@@ -114,124 +133,240 @@ class DatetimePicker(Gtk.HBox):
 
 
 class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
-    def __init__(self):
-       super(TemplateEditor, self).__init__()
-
-       outer = self.get_content_area()
-       frame = Gtk.Frame(shadow_type=Gtk.ShadowType.ETCHED_IN,border_width=5)
-       outer.add(frame)
-       box= Gtk.VBox()
-       frame.add(box)
-
-       self.timerange = TimeRangeViewer()
-       box.pack_start(self.timerange,False,False,0)
-
-       table = Gtk.Table(1,2,True)
-       box.pack_start(table,False,False,0)
-
-       label = Gtk.Label('Result Type :',xalign=0,yalign=0.5)
-       table.attach(label, 0, 1, 0, 1, xpadding=6 ,ypadding=6)
-       self.result_type = Gtk.ComboBoxText(active=28)
-       table.attach(self.result_type, 1, 2, 0, 1, xpadding=6 ,ypadding=6)
-       for entry in dir(ResultType)[:-1]:
-           if not ( entry.startswith('__')):
-              self.result_type.append_text(entry)
-
-       self.table = Gtk.Table(10, 2, False,border_width=5)
-       box.pack_start(self.table, True, True, 0)
-
-       event_label = Gtk.Label()
-       event_label.set_markup("<b>%s</b>" %("Event"))
-
-       # Event Interpretation
-       event_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
-       self.event_inter_field = Gtk.ComboBoxText()
-       for entry in event_interpretations.keys():
-           self.event_inter_field.append_text(entry)
-
-       # Event Manifesation
-       event_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
-       self.event_manifes_field = Gtk.ComboBoxText()
-       for entry in event_manifestations.keys():
-          self.event_manifes_field.append_text(entry)
-
-       actor_label = Gtk.Label("Actor :",xalign=0,yalign=0.5)
-       self.actor_field = Gtk.Label("")
-
-       actor_hbox = Gtk.HBox(margin_bottom=6)
-       self.actor_button = Gtk.Button()
-       self.actor_button.set_size_request(32, 32)
-       actor_hbox.pack_start(self.actor_button, False, False, 12)
-       self.actor_value = Gtk.Label()
-       actor_hbox.pack_start(self.actor_value, False, False, 12)
-
-       subj_label = Gtk.Label()
-       subj_label.set_markup("<b>%s</b>" %("Subject"))
-
-       # URI
-       uri_label = Gtk.Label("URI :",xalign=0,yalign=0.5)
-       self.uri_field = Gtk.Entry(width_chars= 40)
-
-       # Current URI
-       curr_uri_label = Gtk.Label("Current URI :",xalign=0,yalign=0.5)
-       self.curr_uri_field = Gtk.Entry(width_chars= 40)
+    def __init__(self,event=None):
+        super(TemplateEditor, self).__init__()
+        self.create()
+        if event is None:
+            self.event = Event()
+            self.event.set_subjects(Subject())
+            self.edit_mode = False
+        else :
+            self.event = event
+            self.edit_mode = True
 
 
-       # Subject Interpretation
-       subj_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
-       self.subj_inter_field = Gtk.ComboBoxText()
-       for entry in subject_interpretations.keys():
-           self.subj_inter_field.append_text(entry)
+    def create(self):
+        outer = self.get_content_area()
+        frame = Gtk.Frame(shadow_type=Gtk.ShadowType.ETCHED_IN,border_width=5)
+        outer.add(frame)
+        box= Gtk.VBox()
+        frame.add(box)
 
-       # Subject Manifesation
-       subj_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
-       self.subj_manifes_field = Gtk.ComboBoxText()
-       for entry in subject_manifestations.keys():
-              self.subj_manifes_field.append_text(entry)
+        self.timerange = TimeRangeViewer()
+        box.pack_start(self.timerange,False,False,0)
 
-       # Origin
-       origin_label = Gtk.Label("Origin :",xalign=0,yalign=0.5)
-       self.origin_field = Gtk.Entry(width_chars= 40)
+        table = Gtk.Table(1,2,True)
+        box.pack_start(table,False,False,0)
 
-       # Mimetype
-       mimetype_label = Gtk.Label("Mimetype :",xalign=0,yalign=0.5)
-       self.mimetype_field = Gtk.Entry(width_chars= 40)
+        label = Gtk.Label('Result Type :',xalign=0,yalign=0.5)
+        table.attach(label, 0, 1, 0, 1, xpadding=6 ,ypadding=6)
+        self.result_type = Gtk.ComboBoxText()
+        self.result_type.set_active(28)
+        table.attach(self.result_type, 1, 2, 0, 1, xpadding=6 ,ypadding=6)
+        for entry in dir(ResultType)[:-1]:
+            if not ( entry.startswith('__')):
+                self.result_type.append_text(entry)
 
-       # Storage
-       storage_label = Gtk.Label("Storage :",xalign=0,yalign=0.5)
-       self.storage_field = Gtk.ComboBoxText()
-       for entry in dir(StorageState)[:-1]:
-           if not ( entry.startswith('__')):
-              self.storage_field.append_text(entry)
+        self.table = Gtk.Table(10, 2, False,border_width=5)
+        box.pack_start(self.table, True, True, 0)
 
-       attach_list = (
-            (event_label,(0, 2, 0, 1)),
-            (event_inter_label,(0, 1, 1, 2)),
-            (self.event_inter_field,(1, 2, 1, 2)),
-            (event_manifes_label,(0, 1, 2, 3)),
-            (self.event_manifes_field,(1, 2, 2, 3)),
-            (actor_label,(0, 1, 3, 4)),
-            (self.actor_field,(1, 2, 3, 4)),
-            (actor_hbox,(1, 2, 4, 5)),
-            (subj_label,(0, 2, 5, 6)),
-            (uri_label,(0, 1, 6, 7)),
-            (self.uri_field,(1, 2, 6, 7)),
-            (curr_uri_label,(0, 1, 7, 8)),
-            (self.curr_uri_field,(1, 2, 7, 8)),
-            (subj_inter_label,(0, 1, 8, 9)),
-            (self.subj_inter_field,(1, 2, 8, 9)),
-            (subj_manifes_label,(0, 1, 9, 10)),
-            (self.subj_manifes_field,(1, 2, 9,10)),
-            (origin_label,(0, 1, 10, 11)),
-            (self.origin_field,(1, 2, 10, 11)),
-            (mimetype_label,(0, 1, 11, 12)),
-            (self.mimetype_field,(1, 2, 11, 12)),
-            (storage_label,(0, 1, 12, 13)),
-            (self.storage_field,(1, 2, 12, 13))
-        )
-       for widget_entry in attach_list :
-           widget,pos = widget_entry
-           self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=3, ypadding=3)
+        event_label = Gtk.Label()
+        event_label.set_markup("<b>%s</b>" %("Event"))
+
+        # Event Interpretation
+        event_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
+        self.event_inter_field = Gtk.ComboBoxText()
+        for entry in event_interpretations.keys():
+            self.event_inter_field.append_text(entry)
+
+        # Event Manifesation
+        event_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
+        self.event_manifes_field = Gtk.ComboBoxText()
+        for entry in event_manifestations.keys():
+           self.event_manifes_field.append_text(entry)
+
+        actor_label = Gtk.Label("Actor :",xalign=0,yalign=0.5)
+        self.actor_field = Gtk.Label("")
+
+        actor_hbox = Gtk.HBox(margin_bottom=6)
+
+        self.actor_dropdown = Gtk.ComboBoxText()
+        self.app_dict={'':''}
+        for app in Gio.DesktopAppInfo.get_all():
+            self.actor_dropdown.append_text(app.get_name())
+            self.app_dict[app.get_name()] = app.get_id()
+
+        self.actor_dropdown.connect("changed", self.on_app_changed)
+
+        actor_hbox.pack_start(self.actor_dropdown, False, False, 12)
+        self.actor_image = Gtk.Image()
+        self.actor_image.set_size_request(32, 32)
+        frame = Gtk.Frame()
+        frame.add(self.actor_image)
+        actor_hbox.pack_start(frame, False, False, 12)
+        self.actor_value = Gtk.Label()
+        actor_hbox.pack_start(self.actor_value, False, False, 12)
+
+        subj_label = Gtk.Label()
+        subj_label.set_markup("<b>%s</b>" %("Subject"))
+
+        # URI
+        uri_label = Gtk.Label("URI :",xalign=0,yalign=0.5)
+        self.uri_field = Gtk.Entry(width_chars= 40)
+
+        # Current URI
+        curr_uri_label = Gtk.Label("Current URI :",xalign=0,yalign=0.5)
+        self.curr_uri_field = Gtk.Entry(width_chars= 40)
+
+
+        # Subject Interpretation
+        subj_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
+        self.subj_inter_field = Gtk.ComboBoxText()
+        for entry in subject_interpretations.keys():
+            self.subj_inter_field.append_text(entry)
+
+        # Subject Manifesation
+        subj_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
+        self.subj_manifes_field = Gtk.ComboBoxText()
+        for entry in subject_manifestations.keys():
+               self.subj_manifes_field.append_text(entry)
+
+        # Origin
+        origin_label = Gtk.Label("Origin :",xalign=0,yalign=0.5)
+        self.origin_field = Gtk.Entry(width_chars= 40)
+
+        # Mimetype
+        mimetype_label = Gtk.Label("Mimetype :",xalign=0,yalign=0.5)
+        self.mimetype_field = Gtk.Entry(width_chars= 40)
+
+        # Storage
+        storage_label = Gtk.Label("Storage :",xalign=0,yalign=0.5)
+        self.storage_field = Gtk.ComboBoxText()
+        for entry in storage_states.keys():
+               self.storage_field.append_text(entry)
+
+
+        attach_list = (
+             (event_label,(0, 2, 0, 1)),
+             (event_inter_label,(0, 1, 1, 2)),
+             (self.event_inter_field,(1, 2, 1, 2)),
+             (event_manifes_label,(0, 1, 2, 3)),
+             (self.event_manifes_field,(1, 2, 2, 3)),
+             (actor_label,(0, 1, 3, 4)),
+             (self.actor_field,(1, 2, 3, 4)),
+             (actor_hbox,(1, 2, 4, 5)),
+             (subj_label,(0, 2, 5, 6)),
+             (uri_label,(0, 1, 6, 7)),
+             (self.uri_field,(1, 2, 6, 7)),
+             (curr_uri_label,(0, 1, 7, 8)),
+             (self.curr_uri_field,(1, 2, 7, 8)),
+             (subj_inter_label,(0, 1, 8, 9)),
+             (self.subj_inter_field,(1, 2, 8, 9)),
+             (subj_manifes_label,(0, 1, 9, 10)),
+             (self.subj_manifes_field,(1, 2, 9,10)),
+             (origin_label,(0, 1, 10, 11)),
+             (self.origin_field,(1, 2, 10, 11)),
+             (mimetype_label,(0, 1, 11, 12)),
+             (self.mimetype_field,(1, 2, 11, 12)),
+             (storage_label,(0, 1, 12, 13)),
+             (self.storage_field,(1, 2, 12, 13))
+         )
+        for widget_entry in attach_list :
+            widget,pos = widget_entry
+            self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=3, ypadding=3)
+
+        self.add_buttons('Apply',Gtk.ResponseType.APPLY,'Cancel',Gtk.ResponseType.CANCEL,'OK',Gtk.ResponseType.OK,)
+
+    def set_values(self):
+        self.event_inter_field.set_active(event_interpretations. \
+                        values().index(self.event.get_interpretation()))
+        self.event_manifes_field.set_active(event_manifestations.\
+                        values().index(self.event.get_manifestation()))
+
+        actor = self.event.get_actor()
+        self.actor_field.set_text(actor)
+        if actor is not "" and actor.startswith("application://"):
+            actor =  actor.replace("application://", "")
+            try:
+                app_info = Gio.DesktopAppInfo.new(actor)
+                self.actor_dropdown.set_active(actor_dict.keys().index(app_info.get_name()))
+                self.actor_value.set_text(app_info.get_display_name())
+                self.actor_image = Gtk.Image.new_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
+
+            except TypeError:
+                print("Wrong actor string: %s" %(actor))
+        else:
+            self.actor_value.set_text("")
+
+        sub = self.event.get_subjects()
+
+        self.uri_field.set_text(sub.get_uri())
+        self.curr_uri_field.set_text(sub.get_current_uri())
+        self.subj_inter_field.set_active(subject_interpretations. \
+                        values().index(sub.get_interpretation()))
+        self.subj_manifes_field.set_active(subject_manifestations.\
+                        values().index(sub.get_manifestation()))
+        self.origin_field.set_text(sub.get_origin())
+        self.mimetype_field.set_text(sub.get_mimetype())
+        self.storage_field.set_active(storage_states.\
+                        values().index(sub.get_storage()))
+
+
+
+    def get_values(self):
+
+        ev_inter=self.event_inter_field.get_active_text()
+        if ev_inter is None:
+            ev_inter=''
+        self.event.set_interpretation(event_interpretations[ev_inter])
+
+        ev_manifes=self.event_manifes_field.get_active_text()
+        if ev_manifes is None:
+            ev_manifes=''
+        self.event.set_manifestation(event_manifestations[ev_manifes])
+
+        app=self.actor_dropdown.get_active_text()
+        if app is None:
+            app=''
+        self.event.set_actor(''.join([r"application://",self.app_dict[app]]))
+
+        #subject
+        sub = self.event.get_subjects()
+
+        sub.set_uri(self.uri_field.get_text().strip())
+        sub.set_current_uri(self.curr_uri_field.get_text().strip())
+
+        sub_inter=self.subj_inter_field.get_active_text()
+        if sub_inter is None:
+            sub_inter=''
+        sub.set_interpretation(subject_interpretations[sub_inter])
+
+        sub_manifes=self.subj_manifes_field.get_active_text()
+        if sub_manifes is None:
+            sub_manifes=''
+        sub.set_manifestation(subject_manifestations[sub_manifes])
+
+        sub.set_origin(self.origin_field.get_text().strip())
+        sub.set_mimetype(self.mimetype_field.get_text().strip())
+
+        sub_stor=self.storage_field.get_active_text()
+        if sub_stor is None:
+            sub_stor=''
+        sub.set_storage(storage_states[sub_stor])
+        self.event.set_subjects(sub)
+
+    def on_app_changed(self,widget):
+        app=self.actor_dropdown.get_active_text()
+        if app is None:
+            app=''
+        actor = self.app_dict[app]
+        self.actor_field.set_text(''.join([r'application://',actor]))
+        app_info = Gio.DesktopAppInfo.new(actor)
+        self.actor_dropdown.set_active(actor_dict.keys().index(app_info.get_name()))
+        self.actor_value.set_text(app_info.get_display_name())
+        self.actor_image = Gtk.Image.new_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
+
+
 
 
 
