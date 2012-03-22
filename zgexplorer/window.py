@@ -4,6 +4,7 @@
 # Zeitgeist Explorer
 #
 # Copyright © 2012 Manish Sinha <manishsinha@ubuntu.com>
+# Copyright © 2012 Dhananjay Sathe <dhananjaysathe@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
@@ -33,7 +34,7 @@ class ExplorerMainWindow(Gtk.Window):
         super(ExplorerMainWindow, self).__init__()
         self.connect("destroy", Gtk.main_quit)
         self.set_title("Zeitgeist Explorer")
-        self.set_size_request(1400, 900)
+        self.set_default_size(800, 600)
 
         self.client = ZeitgeistClient()
 
