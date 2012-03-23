@@ -124,7 +124,7 @@ class MonitorViewer(Gtk.VBox):
         self.show_all()
 
     def map(self, index, is_predefined):
-        self.entry = self.builtin[index] if is_predefined else None
+        self.entry = self.builtin[index] if is_predefined else self.custom_event_filters[index]
         if self.entry is not None:
             self.desc_entry.set_text(self.entry[1])
 

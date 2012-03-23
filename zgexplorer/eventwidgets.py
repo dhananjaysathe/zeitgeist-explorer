@@ -35,7 +35,7 @@ def get_active_text(combobox):
           return ''
       return model[active][0]
 class TimeRangeViewer(Gtk.VBox):
-    def __init__(self):
+    def __init__(self,start_time=None,end_time=None):
         super(TimeRangeViewer, self).__init__()
 
         timerange_label = Gtk.Label("Time Range",xalign=0 ,yalign=0.5)
@@ -53,8 +53,8 @@ class TimeRangeViewer(Gtk.VBox):
         enteries_box.set_margin_left(14)
         self.pack_start(enteries_box,False,False,3)
 
-        self.start_time = DatetimePicker()
-        self.end_time = DatetimePicker()
+        self.start_time = DatetimePicker(start_time)
+        self.end_time = DatetimePicker(end_time)
         self.start_time.update_sensitivity(False)
         self.end_time.update_sensitivity(False)
 
@@ -79,9 +79,10 @@ class TimeRangeViewer(Gtk.VBox):
 
 
 class DatetimePicker(Gtk.HBox):
-    def __init__(self):
+    def __init__(self,time):
         super(DatetimePicker, self).__init__()
-        time = datetime.now()
+        if time is None:
+            time = datetime.now()
 
         #date
         date_holder = Gtk.HBox()
@@ -120,12 +121,12 @@ class DatetimePicker(Gtk.HBox):
         self.show_all()
 
     def get_datetime(self):
-        return datetime(self.date_spin_year.get_valuea_as_int(),
-                        self.date_spin_month.get_valuea_as_int(),
-                        self.date_spin_day.get_valuea_as_int(),
-                        self.time_spin_hour.get_valuea_as_int(),
-                        self.time_spin_min.get_valuea_as_int(),
-                        self.time_spin_sec.get_valuea_as_int())
+        return datetime(self.date_spin_year.get_value_as_int(),
+                        self.date_spin_month.get_value_as_int(),
+                        self.date_spin_day.get_value_as_int(),
+                        self.time_spin_hour.get_value_as_int(),
+                        self.time_spin_min.get_value_as_int(),
+                        self.time_spin_sec.get_value_as_int())
 
     def update_sensitivity(self,enable):
         self.date_spin_year.set_sensitive(enable)
@@ -141,16 +142,11 @@ class DatetimePicker(Gtk.HBox):
 
 
 class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
-    def __init__(self,event=None):
+    def __init__(self,template=None):
         super(TemplateEditor, self).__init__()
+        self.set_template(template)
         self.create()
-        if event is None:
-            self.event = Event()
-            self.event.set_subjects(Subject())
-            self.edit_mode = False
-        else :
-            self.event = event
-            self.edit_mode = True
+
 
 
     def create(self):
@@ -160,7 +156,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         box= Gtk.VBox()
         frame.add(box)
 
-        self.timerange = TimeRangeViewer()
+        self.timerange = TimeRangeViewer(self.start_time,self.end_time)
         box.pack_start(self.timerange,False,False,0)
 
         table = Gtk.Table(1,2,True)
@@ -308,7 +304,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         else:
             self.actor_value.set_text("")
 
-        sub = self.event.get_subjects()
+        sub = self.event.get_subjects()[0]
 
         self.uri_field.set_text(sub.get_uri())
         self.curr_uri_field.set_text(sub.get_current_uri())
@@ -325,7 +321,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
 
     def get_values(self):
 
-        
+
         ev_inter=get_active_text(self.event_inter_field)
         self.event.set_interpretation(event_interpretations[ev_inter])
 
@@ -352,12 +348,12 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
 
         sub_stor = get_active_text(self.storage_field)
         sub.set_storage(storage_states[sub_stor])
-        
+
         self.event.set_subjects(sub)
 
     def on_app_changed(self,widget):
         app=get_active_text(self.actor_dropdown)
-        try:        
+        try:
             actor = self.app_dict[app]
             self.actor_field.set_text(''.join([r'application://',actor]))
             self.actor_field.set_justify(Gtk.Justification.LEFT)
@@ -370,6 +366,36 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
             self.actor_field.set_text('')
             self.actor_value.set_text('')
             self.actor_image.clear()
+
+    def get_time_range(self):
+        start = self.timerange.get_start_time()
+        end = self.timerange.get_end_time()
+        #TODO
+        #return deltatime range in zeitgeist format??
+
+    def get_template(self):
+        self.get_values()
+        timerange = self.get_time_range()
+        template = ['','',self.event,timerange,]
+        template[2] = self.event
+         # this ensure latest selections are taken before building the template
+        #this function prepares a template from the Time range and
+        # comment gui fields and self.event that has been stored
+        return template
+
+    def set_template(self,template):
+        if template is None:
+
+            self.event = Event()
+            self.event.set_subjects(Subject())
+            self.start_time = None
+            self.end_time = None
+            self.edit_mode = False
+        else :
+            self.event = template[2]
+            #self.start_time =
+            #self.end_time =
+            self.edit_mode = True
 
 
 
@@ -497,6 +523,8 @@ class TemplateViewer(Gtk.VBox):
         if len(ev.get_subjects()) > 0:
             subj = ev.get_subjects()[0]
         else:
+            subj = Subject()
+        if type(subj) == str :
             subj = Subject()
 
         # Subject Interpretation
