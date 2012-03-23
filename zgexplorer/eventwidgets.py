@@ -374,27 +374,33 @@ class TemplateViewer(Gtk.VBox):
     def __init__(self):
        super(TemplateViewer, self).__init__()
 
-       self.table = Gtk.Table(10, 2, True,border_width=10)
+       self.table = Gtk.Table(10, 2, False, border_width=10)
        self.pack_start(self.table, True, True, 0)
 
        event_label = Gtk.Label()
        event_label.set_markup("<b>%s</b>" %("Event"))
 
        # Event Interpretation
-       event_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
-       self.event_inter_field = Gtk.Label("")
+       event_inter_label = Gtk.Label(xalign=1.0,yalign=0.5)
+       event_inter_label.set_markup("<b>%s :</b>" %("Interpretation"))
+       self.event_inter_field = Gtk.Label("", xalign=0,yalign=0.5)
+       self.event_inter_field.set_width_chars(60)
 
        # Event Manifesation
-       event_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
-       self.event_manifes_field = Gtk.Label("")
+       event_manifes_label = Gtk.Label(xalign=1.0,yalign=0.5)
+       event_manifes_label.set_markup("<b>%s : </b>" %("Manifestation"))
+       self.event_manifes_field = Gtk.Label("", xalign=0,yalign=0.5)
 
-       actor_label = Gtk.Label("Actor :",xalign=0,yalign=0.5)
-       self.actor_field = Gtk.Label("")
+
+       actor_label = Gtk.Label(xalign=1.0,yalign=0.5)
+       actor_label.set_markup("<b>%s : </b>" %("Actor : "))
+       self.actor_field = Gtk.Label("", xalign=0,yalign=0.5)
+
 
        actor_hbox = Gtk.HBox(margin_bottom=6)
-       self.actor_button = Gtk.Button()
-       self.actor_button.set_size_request(32, 32)
-       actor_hbox.pack_start(self.actor_button, False, False, 12)
+       self.actor_image = Gtk.Image()
+       self.actor_image.set_size_request(32, 32)
+       actor_hbox.pack_start(self.actor_image, False, False, 12)
        self.actor_value = Gtk.Label()
        actor_hbox.pack_start(self.actor_value, False, False, 12)
 
@@ -403,20 +409,28 @@ class TemplateViewer(Gtk.VBox):
 
 
        # Subject Interpretation
-       subj_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
-       self.subj_inter_field = Gtk.Label("")
+       subj_inter_label = Gtk.Label(xalign=1.0,yalign=0.5)
+       subj_inter_label.set_markup("<b>%s : </b>" %("Interpretation"))
+       self.subj_inter_field = Gtk.Label("", xalign=0,yalign=0.5)
+
 
        # Subject Manifesation
-       subj_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
-       self.subj_manifes_field = Gtk.Label("")
+       subj_manifes_label = Gtk.Label(xalign=1.0,yalign=0.5)
+       subj_manifes_label.set_markup("<b>%s : </b>" %("Manifestation"))
+       self.subj_manifes_field = Gtk.Label("", xalign=0,yalign=0.5)
+
 
        # Mimetype
-       mimetype_label = Gtk.Label("Mimetype :",xalign=0,yalign=0.5)
-       self.mimetype_field = Gtk.Label("")
+       mimetype_label = Gtk.Label(xalign=1.0,yalign=0.5)
+       mimetype_label.set_markup("<b>%s : </b>" %("Mimetype"))
+       self.mimetype_field = Gtk.Label("", xalign=0,yalign=0.5)
+
 
        # Storage
-       storage_label = Gtk.Label("Storage :",xalign=0,yalign=0.5)
-       self.storage_field = Gtk.Label("")
+       storage_label = Gtk.Label(xalign=1.0,yalign=0.5)
+       storage_label.set_markup("<b>%s : </b>" %("Storage"))
+       self.storage_field = Gtk.Label("", xalign=0,yalign=0.5)
+
 
        attach_list = (
             (event_label,(0, 2, 0, 1)),
@@ -440,9 +454,6 @@ class TemplateViewer(Gtk.VBox):
        for widget_entry in attach_list :
            widget,pos = widget_entry
            self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=3, ypadding=3)
-
-    def set_fields_enable(self, enable):
-        self.actor_button.set_sensitive(enable)
 
     def set_values(self, values):
         ev = values[2]
@@ -468,13 +479,12 @@ class TemplateViewer(Gtk.VBox):
             try:
                 app_info = Gio.DesktopAppInfo.new(actor)
                 self.actor_value.set_text(app_info.get_display_name())
-                image = Gtk.Image.new_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
-                self.actor_button.set_image(image)
+                self.actor_image.set_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
             except TypeError:
                 print("Wrong actor string: %s" %(actor))
         else:
             self.actor_value.set_text("")
-            self.actor_button.set_image(Gtk.Image())
+            self.actor_image.clear()
 
         subj = None
         if len(ev.get_subjects()) > 0:

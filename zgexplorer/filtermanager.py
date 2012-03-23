@@ -30,7 +30,8 @@ class FilterManagerDialog(Gtk.Dialog):
     def __init__(self):
         super(FilterManagerDialog, self).__init__()
         self.set_destroy_with_parent(True)
-        self.set_properties('title',"Filter Manager",'margin',12,'content-area-spacing',6) #Check Value
+        self.set_title("Filter Manager")
+        self.set_properties('margin',12,'content-area-spacing',6) #Check Value
         self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
         self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
         self.set_size_request(600, 700)
@@ -72,7 +73,6 @@ class FilterManagerDialog(Gtk.Dialog):
 
         # See the Template values
         self.predefined_viewer = TemplateViewer()
-        self.predefined_viewer.set_fields_enable(False)
         self.predefined_box.pack_start(self.predefined_viewer, False, False, 0)
 
     def add_custom_tab(self):
@@ -100,7 +100,6 @@ class FilterManagerDialog(Gtk.Dialog):
 
         # See the Template values
         self.custom_viewer = TemplateViewer()
-        self.custom_viewer.set_fields_enable(False)
         self.custom_box.pack_start(self.custom_viewer, False, False, 0)
 
 
