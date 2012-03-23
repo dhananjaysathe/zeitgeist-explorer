@@ -96,7 +96,25 @@ class FilterManagerDialog(Gtk.Dialog):
         self.custom_scroll = Gtk.ScrolledWindow(shadow_type=Gtk.ShadowType.IN,border_width=1)
         self.custom_scroll.add(self.custom_view)
         self.custom_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.custom_box.pack_start(self.custom_scroll, True, True, 6)
+        self.custom_scroll.set_shadow_type(Gtk.ShadowType.IN)
+        self.custom_scroll.set_border_width(1)
+        self.custom_box.pack_start(self.custom_scroll, True, True, 0)
+
+        self.toolbar = Gtk.Toolbar(icon_size=1)
+        self.toolbar.set_style(Gtk.ToolbarStyle.ICONS)
+        self.toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_INLINE_TOOLBAR)
+        self.toolbar.get_style_context().set_junction_sides(Gtk.JunctionSides.TOP)
+        self.custom_box.pack_start(self.toolbar, False, False, 0)
+
+        filter_add = Gtk.ToolButton.new(None, "Add Filter")
+        filter_add.set_icon_name("list-add-symbolic")
+        #filter_add.connect("clicked", self.on_add_clicked)
+        self.toolbar.insert(filter_add, 0)
+
+        filter_remove = Gtk.ToolButton.new(None, "Remove Filter")
+        filter_remove.set_icon_name("list-remove-symbolic")
+        #filter_remove.connect("clicked", self.on_remove_clicked)
+        self.toolbar.insert(filter_remove, 1)
 
         # See the Template values
         self.custom_viewer = TemplateViewer()
@@ -119,13 +137,6 @@ class FilterManagerDialog(Gtk.Dialog):
             return index,self.builtin[index], is_predefined
 
         return None
-
-    def on_button_toggled(self, button, name):
-        if button.get_active():
-            state = "on"
-        else:
-            state = "off"
-        print "Button", name, "was turned", state
 
     def on_cursor_changed(self, treeview):
         index = self.get_selected_index()
