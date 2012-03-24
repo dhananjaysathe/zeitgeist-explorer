@@ -27,32 +27,40 @@ from zeitgeist.datamodel import Event, Subject, Manifestation, \
     Interpretation, StorageState, Symbol, ResultType
 from lookupdata import *
 
+# workaround for Gtk ComboBoxText Widgets
+def get_active_text(combobox):
+      model = combobox.get_model()
+      active = combobox.get_active()
+      if active < 0:
+          return ''
+      return model[active][0]
 class TimeRangeViewer(Gtk.VBox):
-    def __init__(self):
+    def __init__(self,start_time=None,end_time=None):
         super(TimeRangeViewer, self).__init__()
 
         timerange_label = Gtk.Label("Time Range",xalign=0 ,yalign=0.5)
         self.pack_start(timerange_label,False,False,3)
 
-        self.always_radio = Gtk.RadioButton(label= "Always",margin_left= 12)
+        self.always_radio = Gtk.RadioButton(label= "Always")
         self.pack_start(self.always_radio,False,False,3)
         self.always_radio.connect('toggled',self.update_sensitivity)
 
-        self.custom_radio = Gtk.RadioButton(label= "Custom",margin_left= 12)
+        self.custom_radio = Gtk.RadioButton(label= "Custom")
         self.custom_radio.join_group(self.always_radio)
         self.pack_start(self.custom_radio,False,False,3)
 
-        enteries_box = Gtk.VBox(margin_left=14)
+        enteries_box = Gtk.VBox()
+        enteries_box.set_margin_left(14)
         self.pack_start(enteries_box,False,False,3)
 
-        self.start_time = DatetimePicker()
-        self.end_time = DatetimePicker()
+        self.start_time = DatetimePicker(start_time)
+        self.end_time = DatetimePicker(end_time)
         self.start_time.update_sensitivity(False)
         self.end_time.update_sensitivity(False)
 
-        enteries_box.pack_start(Gtk.Label('From :',xalign=0 ,yalign=0.5),False,False,1)
+        enteries_box.pack_start(Gtk.Label('From :',xalign=0 ,yalign=0.5),False,False,0)
         enteries_box.pack_start(self.start_time,False,False,1)
-        enteries_box.pack_start(Gtk.Label('To :',xalign=0 ,yalign=0.5),False,False,1)
+        enteries_box.pack_start(Gtk.Label('To :',xalign=0 ,yalign=0.5),False,False,0)
         enteries_box.pack_start(self.end_time,False,False,1)
 
     def get_start_time(self):
@@ -71,14 +79,15 @@ class TimeRangeViewer(Gtk.VBox):
 
 
 class DatetimePicker(Gtk.HBox):
-    def __init__(self):
+    def __init__(self,time):
         super(DatetimePicker, self).__init__()
-        time = datetime.now()
+        if time is None:
+            time = datetime.now()
 
         #date
         date_holder = Gtk.HBox()
-        self.pack_start(date_holder,False,False,6)
-        date_holder.pack_start(Gtk.Label('DD|MM|YY :'),False,False,6)
+        self.pack_start(date_holder,False,False,3)
+        date_holder.pack_start(Gtk.Label('DD|MM|YY :'),False,False,3)
         self.date_spin_day = Gtk.SpinButton(numeric=True)
         self.date_spin_day.set_adjustment(Gtk.Adjustment(lower=1,
                  upper=32,page_size=1,step_increment=1,value=time.day))
@@ -94,8 +103,8 @@ class DatetimePicker(Gtk.HBox):
 
         #time
         time_holder = Gtk.HBox()
-        self.pack_end(time_holder,False,False,6)
-        time_holder.pack_start(Gtk.Label('HH:MM:SS '),False,False,6)
+        self.pack_end(time_holder,False,False,3)
+        time_holder.pack_start(Gtk.Label('HH:MM:SS '),False,False,3)
         self.time_spin_hour = Gtk.SpinButton(numeric=True)
         self.time_spin_hour.set_adjustment(Gtk.Adjustment(lower=0,
                  upper=24,page_size=1,step_increment=1,value=time.hour))
@@ -112,12 +121,12 @@ class DatetimePicker(Gtk.HBox):
         self.show_all()
 
     def get_datetime(self):
-        return datetime(self.date_spin_year.get_valuea_as_int(),
-                        self.date_spin_month.get_valuea_as_int(),
-                        self.date_spin_day.get_valuea_as_int(),
-                        self.time_spin_hour.get_valuea_as_int(),
-                        self.time_spin_min.get_valuea_as_int(),
-                        self.time_spin_sec.get_valuea_as_int())
+        return datetime(self.date_spin_year.get_value_as_int(),
+                        self.date_spin_month.get_value_as_int(),
+                        self.date_spin_day.get_value_as_int(),
+                        self.time_spin_hour.get_value_as_int(),
+                        self.time_spin_min.get_value_as_int(),
+                        self.time_spin_sec.get_value_as_int())
 
     def update_sensitivity(self,enable):
         self.date_spin_year.set_sensitive(enable)
@@ -133,16 +142,11 @@ class DatetimePicker(Gtk.HBox):
 
 
 class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
-    def __init__(self,event=None):
+    def __init__(self,template=None):
         super(TemplateEditor, self).__init__()
+        self.set_template(template)
         self.create()
-        if event is None:
-            self.event = Event()
-            self.event.set_subjects(Subject())
-            self.edit_mode = False
-        else :
-            self.event = event
-            self.edit_mode = True
+
 
 
     def create(self):
@@ -152,7 +156,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         box= Gtk.VBox()
         frame.add(box)
 
-        self.timerange = TimeRangeViewer()
+        self.timerange = TimeRangeViewer(self.start_time,self.end_time)
         box.pack_start(self.timerange,False,False,0)
 
         table = Gtk.Table(1,2,True)
@@ -186,7 +190,9 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
            self.event_manifes_field.append_text(entry)
 
         actor_label = Gtk.Label("Actor :",xalign=0,yalign=0.5)
-        self.actor_field = Gtk.Label("")
+        self.actor_field = Gtk.Label()
+        self.actor_field.set_justify(Gtk.Justification.LEFT)
+        self.actor_field.set_line_wrap(True)
 
         actor_hbox = Gtk.HBox(margin_bottom=6)
 
@@ -201,10 +207,8 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         actor_hbox.pack_start(self.actor_dropdown, False, False, 12)
         self.actor_image = Gtk.Image()
         self.actor_image.set_size_request(32, 32)
-        frame = Gtk.Frame()
-        frame.add(self.actor_image)
-        actor_hbox.pack_start(frame, False, False, 12)
-        self.actor_value = Gtk.Label()
+        actor_hbox.pack_start(self.actor_image, False, False, 2)
+        self.actor_value = Gtk.Label(xalign=0,yalign=0.5)
         actor_hbox.pack_start(self.actor_value, False, False, 12)
 
         subj_label = Gtk.Label()
@@ -285,20 +289,22 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
 
         actor = self.event.get_actor()
         self.actor_field.set_text(actor)
+        self.actor_field.set_justify(Gtk.Justification.LEFT)
+        self.actor_field.set_line_wrap(True)
         if actor is not "" and actor.startswith("application://"):
             actor =  actor.replace("application://", "")
             try:
                 app_info = Gio.DesktopAppInfo.new(actor)
-                self.actor_dropdown.set_active(actor_dict.keys().index(app_info.get_name()))
+                self.actor_dropdown.set_active(self.app_dict.keys().index(app_info.get_name()))
                 self.actor_value.set_text(app_info.get_display_name())
-                self.actor_image = Gtk.Image.new_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
+                self.actor_image.set_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
 
             except TypeError:
                 print("Wrong actor string: %s" %(actor))
         else:
             self.actor_value.set_text("")
 
-        sub = self.event.get_subjects()
+        sub = self.event.get_subjects()[0]
 
         self.uri_field.set_text(sub.get_uri())
         self.curr_uri_field.set_text(sub.get_current_uri())
@@ -315,19 +321,14 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
 
     def get_values(self):
 
-        ev_inter=self.event_inter_field.get_active_text()
-        if ev_inter is None:
-            ev_inter=''
+
+        ev_inter=get_active_text(self.event_inter_field)
         self.event.set_interpretation(event_interpretations[ev_inter])
 
-        ev_manifes=self.event_manifes_field.get_active_text()
-        if ev_manifes is None:
-            ev_manifes=''
+        ev_manifes=get_active_text(self.event_manifes_field)
         self.event.set_manifestation(event_manifestations[ev_manifes])
 
-        app=self.actor_dropdown.get_active_text()
-        if app is None:
-            app=''
+        app=get_active_text(self.actor_dropdown)
         self.event.set_actor(''.join([r"application://",self.app_dict[app]]))
 
         #subject
@@ -336,35 +337,65 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         sub.set_uri(self.uri_field.get_text().strip())
         sub.set_current_uri(self.curr_uri_field.get_text().strip())
 
-        sub_inter=self.subj_inter_field.get_active_text()
-        if sub_inter is None:
-            sub_inter=''
+        sub_inter= get_active_text(self.subj_inter_field)
         sub.set_interpretation(subject_interpretations[sub_inter])
 
-        sub_manifes=self.subj_manifes_field.get_active_text()
-        if sub_manifes is None:
-            sub_manifes=''
+        sub_manifes = get_active_text(self.subj_manifes_field)
         sub.set_manifestation(subject_manifestations[sub_manifes])
 
         sub.set_origin(self.origin_field.get_text().strip())
         sub.set_mimetype(self.mimetype_field.get_text().strip())
 
-        sub_stor=self.storage_field.get_active_text()
-        if sub_stor is None:
-            sub_stor=''
+        sub_stor = get_active_text(self.storage_field)
         sub.set_storage(storage_states[sub_stor])
+
         self.event.set_subjects(sub)
 
     def on_app_changed(self,widget):
-        app=self.actor_dropdown.get_active_text()
-        if app is None:
-            app=''
-        actor = self.app_dict[app]
-        self.actor_field.set_text(''.join([r'application://',actor]))
-        app_info = Gio.DesktopAppInfo.new(actor)
-        self.actor_dropdown.set_active(actor_dict.keys().index(app_info.get_name()))
-        self.actor_value.set_text(app_info.get_display_name())
-        self.actor_image = Gtk.Image.new_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
+        app=get_active_text(self.actor_dropdown)
+        try:
+            actor = self.app_dict[app]
+            self.actor_field.set_text(''.join([r'application://',actor]))
+            self.actor_field.set_justify(Gtk.Justification.LEFT)
+            self.actor_field.set_line_wrap(True)
+            app_info = Gio.DesktopAppInfo.new(actor)
+            self.actor_value.set_text(app_info.get_display_name())
+            self.actor_image.set_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
+        except:
+            print('DEBUG : Complete Application Info for %s not available',actor)
+            self.actor_field.set_text('')
+            self.actor_value.set_text('')
+            self.actor_image.clear()
+
+    def get_time_range(self):
+        start = self.timerange.get_start_time()
+        end = self.timerange.get_end_time()
+        #TODO
+        #return deltatime range in zeitgeist format??
+
+    def get_template(self):
+        self.get_values()
+        timerange = self.get_time_range()
+        template = ['','',self.event,timerange,]
+        template[2] = self.event
+         # this ensure latest selections are taken before building the template
+        #this function prepares a template from the Time range and
+        # comment gui fields and self.event that has been stored
+        return template
+
+    def set_template(self,template):
+        if template is None:
+
+            self.event = Event()
+            self.event.set_subjects(Subject())
+            self.start_time = None
+            self.end_time = None
+            self.edit_mode = False
+        else :
+            self.event = template[2]
+            #self.start_time =
+            #self.end_time =
+            self.edit_mode = True
 
 
 
@@ -474,6 +505,8 @@ class TemplateViewer(Gtk.VBox):
 
         actor = ev.get_actor()
         self.actor_field.set_text(actor)
+        self.actor_field.set_line_wrap(True)
+
         if actor is not "" and actor.startswith("application://"):
             actor =  actor.replace("application://", "")
             try:
@@ -490,6 +523,8 @@ class TemplateViewer(Gtk.VBox):
         if len(ev.get_subjects()) > 0:
             subj = ev.get_subjects()[0]
         else:
+            subj = Subject()
+        if type(subj) == str :
             subj = Subject()
 
         # Subject Interpretation

@@ -23,7 +23,7 @@
 from gi.repository import Gtk, Pango
 
 from templates import BuiltInFilters
-from eventwidgets import TemplateViewer, TimeRangeViewer
+from eventwidgets import TemplateViewer, TimeRangeViewer, TemplateEditor
 
 class FilterManagerDialog(Gtk.Dialog):
 
@@ -35,14 +35,19 @@ class FilterManagerDialog(Gtk.Dialog):
         self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
         self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
         self.set_size_request(600, 700)
+        self.active_page_index = 0
+        self.is_predefined = True
 
         box = self.get_content_area()
 
         self.notebook = Gtk.Notebook()
+        self.notebook.connect('switch-page',self.on_notebook_switch_page)
         box.pack_start(self.notebook, True, True, 0)
 
         self.add_predefined_tab()
         self.add_custom_tab()
+
+        self.custom_event_filters={}
 
         box.show_all()
 
@@ -82,7 +87,7 @@ class FilterManagerDialog(Gtk.Dialog):
         self.custom_store = Gtk.ListStore(int, str)
 
         self.custom_view = Gtk.TreeView(model=self.custom_store)
-        self.custom_view.connect("cursor-changed", self.on_custom_cursor_changed)
+        self.custom_view.connect("cursor-changed", self.on_cursor_changed)
 
         column_pix_name = Gtk.TreeViewColumn(_('Name'))
         self.custom_view.append_column(column_pix_name)
@@ -108,12 +113,17 @@ class FilterManagerDialog(Gtk.Dialog):
 
         filter_add = Gtk.ToolButton.new(None, "Add Filter")
         filter_add.set_icon_name("list-add-symbolic")
-        #filter_add.connect("clicked", self.on_add_clicked)
+        filter_add.connect("clicked", self.on_add_clicked)
         self.toolbar.insert(filter_add, 0)
+
+        filter_edit = Gtk.ToolButton.new(None, "Edit Filter")
+        filter_edit.set_icon_name("list-edit-symbolic")
+        filter_edit.connect("clicked", self.on_edit_clicked)
+        self.toolbar.insert(filter_edit, 0)
 
         filter_remove = Gtk.ToolButton.new(None, "Remove Filter")
         filter_remove.set_icon_name("list-remove-symbolic")
-        #filter_remove.connect("clicked", self.on_remove_clicked)
+        filter_remove.connect("clicked", self.on_remove_clicked)
         self.toolbar.insert(filter_remove, 1)
 
         # See the Template values
@@ -122,7 +132,11 @@ class FilterManagerDialog(Gtk.Dialog):
 
 
     def get_selected_index(self):
-        selection = self.predefined_view.get_selection()
+        if self.is_predefined:
+            selection = self.predefined_view.get_selection()
+        else :
+            selection = self.custom_view.get_selection()
+
         model, _iter = selection.get_selected()
         if _iter is not None:
             app_index = model.get(_iter, 0)
@@ -132,16 +146,67 @@ class FilterManagerDialog(Gtk.Dialog):
 
     def get_selected_entry(self):
         index = self.get_selected_index()
-        is_predefined = True
         if index is not None:
-            return index,self.builtin[index], is_predefined
+            if self.is_predefined :
+                return index,self.builtin[index], True
+            else :
+                return index,self.custom_event_filters[index], False
 
         return None
+
+    def on_notebook_switch_page(self, widget, page, page_num):
+        self.is_predefined = not bool(page_num)
 
     def on_cursor_changed(self, treeview):
         index = self.get_selected_index()
         if index is not None:
-            self.predefined_viewer.set_values(self.builtin[index])
+            if self.is_predefined :
+                self.predefined_viewer.set_values(self.builtin[index])
+            else:
+                self.custom_viewer.set_values(self.custom_event_filters[index])
 
-    def on_custom_cursor_changed(self, treeview):
-        pass
+
+    def on_add_clicked(self,widget):
+        template = self.run_template_add_edit_dialog()
+        curr_size = len(self.custom_store)
+        self.custom_store.append([curr_size, template[0]])
+        self.custom_event_filters[curr_size] = template
+
+    def on_edit_clicked(self,widget):
+        index,template = self.get_selected_entry()
+        template = self.run_template_add_edit_dialog(template)
+        self.custom_store[index] = template[0]
+        self.custom_event_filters[index] = template
+
+    def on_remove_clicked(self):
+        index,template = self.get_selected_entry()
+        for row in self.custom_store:
+            if row[0] == index :
+                self.custom_store.remove(row.iter)
+                break
+        del self.custom_event_filters[index]
+
+
+    def run_template_add_edit_dialog(self,template=None):
+
+        dialog = TemplateEditor(template)
+        dialog.show_all()
+
+        while True:
+            response_id = dialog.run()
+            if response_id in [Gtk.ResponseType.OK,Gtk.ResponseType.APPLY] :
+                template = dialog.get_template()
+
+                if response_id == Gtk.ResponseType.OK:
+                    dialog.hide()
+                    break
+
+            else:
+                dialog.hide()
+                return None
+
+        return template
+
+
+
+
