@@ -34,6 +34,7 @@ def get_active_text(combobox):
       if active < 0:
           return ''
       return model[active][0]
+
 class TimeRangeViewer(Gtk.VBox):
     def __init__(self,start_time=None,end_time=None):
         super(TimeRangeViewer, self).__init__()
@@ -73,9 +74,6 @@ class TimeRangeViewer(Gtk.VBox):
         enable = not self.always_radio.get_active()
         self.start_time.update_sensitivity(enable)
         self.end_time.update_sensitivity(enable)
-
-
-
 
 
 class DatetimePicker(Gtk.HBox):
@@ -142,12 +140,14 @@ class DatetimePicker(Gtk.HBox):
 
 
 class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
-    def __init__(self,template=None):
+    def __init__(self):
         super(TemplateEditor, self).__init__()
-        self.set_template(template)
+
+        self.set_title("Template Editor")
+        self.start_time = None
+        self.end_time = None
+
         self.create()
-
-
 
     def create(self):
         outer = self.get_content_area()
@@ -332,7 +332,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         self.event.set_actor(''.join([r"application://",self.app_dict[app]]))
 
         #subject
-        sub = self.event.get_subjects()
+        sub = self.event.get_subjects()[0]
 
         sub.set_uri(self.uri_field.get_text().strip())
         sub.set_current_uri(self.curr_uri_field.get_text().strip())
@@ -387,15 +387,17 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         if template is None:
 
             self.event = Event()
-            self.event.set_subjects(Subject())
+            self.event.set_subjects([Subject(),])
             self.start_time = None
             self.end_time = None
             self.edit_mode = False
-        else :
+        else:
             self.event = template[2]
             #self.start_time =
             #self.end_time =
             self.edit_mode = True
+
+        self.set_values()
 
 
 

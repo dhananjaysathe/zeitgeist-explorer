@@ -47,6 +47,8 @@ class FilterManagerDialog(Gtk.Dialog):
         self.add_predefined_tab()
         self.add_custom_tab()
 
+        self.dialog = TemplateEditor()
+
         self.custom_event_filters={}
 
         box.show_all()
@@ -112,19 +114,22 @@ class FilterManagerDialog(Gtk.Dialog):
         self.custom_box.pack_start(self.toolbar, False, False, 0)
 
         filter_add = Gtk.ToolButton.new(None, "Add Filter")
+        filter_add.set_tooltip_text(filter_add.get_label())
         filter_add.set_icon_name("list-add-symbolic")
         filter_add.connect("clicked", self.on_add_clicked)
-        self.toolbar.insert(filter_add, 0)
+        self.toolbar.insert(filter_add, -1)
 
         filter_edit = Gtk.ToolButton.new(None, "Edit Filter")
-        filter_edit.set_icon_name("list-edit-symbolic")
+        filter_edit.set_tooltip_text(filter_edit.get_label())
+        filter_edit.set_icon_name("edit-copy-symbolic")
         filter_edit.connect("clicked", self.on_edit_clicked)
-        self.toolbar.insert(filter_edit, 0)
+        self.toolbar.insert(filter_edit, -1)
 
         filter_remove = Gtk.ToolButton.new(None, "Remove Filter")
+        filter_remove.set_tooltip_text(filter_remove.get_label())
         filter_remove.set_icon_name("list-remove-symbolic")
         filter_remove.connect("clicked", self.on_remove_clicked)
-        self.toolbar.insert(filter_remove, 1)
+        self.toolbar.insert(filter_remove, -1)
 
         # See the Template values
         self.custom_viewer = TemplateViewer()
@@ -152,7 +157,7 @@ class FilterManagerDialog(Gtk.Dialog):
             else :
                 return index,self.custom_event_filters[index], False
 
-        return None
+        return None, None, None
 
     def on_notebook_switch_page(self, widget, page, page_num):
         self.is_predefined = not bool(page_num)
@@ -168,41 +173,43 @@ class FilterManagerDialog(Gtk.Dialog):
 
     def on_add_clicked(self,widget):
         template = self.run_template_add_edit_dialog()
-        curr_size = len(self.custom_store)
-        self.custom_store.append([curr_size, template[0]])
-        self.custom_event_filters[curr_size] = template
+        if template is not None:
+            curr_size = len(self.custom_store)
+            self.custom_store.append([curr_size, template[0]])
+            self.custom_event_filters[curr_size] = template
 
     def on_edit_clicked(self,widget):
-        index,template = self.get_selected_entry()
-        template = self.run_template_add_edit_dialog(template)
-        self.custom_store[index] = template[0]
-        self.custom_event_filters[index] = template
+        index,template,is_predefined = self.get_selected_entry()
+        if index is not None:
+            template = self.run_template_add_edit_dialog(template)
+            self.custom_store[index] = template[0]
+            self.custom_event_filters[index] = template
 
-    def on_remove_clicked(self):
-        index,template = self.get_selected_entry()
+    def on_remove_clicked(self,widget):
+        index,template,is_predefind = self.get_selected_entry()
         for row in self.custom_store:
             if row[0] == index :
                 self.custom_store.remove(row.iter)
+                del self.custom_event_filters[index]
                 break
-        del self.custom_event_filters[index]
 
 
     def run_template_add_edit_dialog(self,template=None):
 
-        dialog = TemplateEditor(template)
-        dialog.show_all()
+        self.dialog.set_template(template)
+        self.dialog.show_all()
 
         while True:
-            response_id = dialog.run()
+            response_id = self.dialog.run()
             if response_id in [Gtk.ResponseType.OK,Gtk.ResponseType.APPLY] :
-                template = dialog.get_template()
+                template = self.dialog.get_template()
 
                 if response_id == Gtk.ResponseType.OK:
-                    dialog.hide()
+                    self.dialog.hide()
                     break
 
             else:
-                dialog.hide()
+                self.dialog.hide()
                 return None
 
         return template
