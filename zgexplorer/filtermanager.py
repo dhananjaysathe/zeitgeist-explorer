@@ -20,15 +20,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
 
-from gi.repository import Gtk, Pango
+from gi.repository import Gtk, Gdk, Pango
 
 from templates import BuiltInFilters
 from eventwidgets import TemplateViewer, TimeRangeViewer, TemplateEditor
 
 class FilterManagerDialog(Gtk.Dialog):
 
-    def __init__(self):
+    main_window = None
+
+    def __init__(self, window):
         super(FilterManagerDialog, self).__init__()
+        self.main_window = window
         self.set_destroy_with_parent(True)
         self.set_title("Filter Manager")
         self.set_properties('margin',12,'content-area-spacing',6) #Check Value
@@ -36,6 +39,7 @@ class FilterManagerDialog(Gtk.Dialog):
         self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
         self.set_size_request(600, 700)
         self.active_page_index = 0
+        self.set_type_hint(Gdk.WindowTypeHint.MENU)
         self.is_predefined = True
 
         box = self.get_content_area()
@@ -48,6 +52,7 @@ class FilterManagerDialog(Gtk.Dialog):
         self.add_custom_tab()
 
         self.dialog = TemplateEditor()
+        self.dialog.set_transient_for(self.main_window)
 
         self.custom_event_filters={}
 
@@ -142,12 +147,13 @@ class FilterManagerDialog(Gtk.Dialog):
         else :
             selection = self.custom_view.get_selection()
 
-        model, _iter = selection.get_selected()
-        if _iter is not None:
-            app_index = model.get(_iter, 0)
-            return app_index[0]
-        else:
-            return None
+        if selection is not None:
+            model, _iter = selection.get_selected()
+            if _iter is not None:
+                app_index = model.get(_iter, 0)
+                return app_index[0]
+            else:
+                return None
 
     def get_selected_entry(self):
         index = self.get_selected_index()

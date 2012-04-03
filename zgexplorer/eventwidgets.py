@@ -22,7 +22,7 @@
 
 import codecs
 from datetime import datetime
-from gi.repository import Gtk, Gio
+from gi.repository import Gtk, Gdk, Gio
 from zeitgeist.datamodel import Event, Subject, Manifestation, \
     Interpretation, StorageState, Symbol, ResultType
 from lookupdata import *
@@ -144,6 +144,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         super(TemplateEditor, self).__init__()
 
         self.set_title("Template Editor")
+        self.set_type_hint(Gdk.WindowTypeHint.MENU)
         self.start_time = None
         self.end_time = None
 
@@ -426,11 +427,12 @@ class TemplateViewer(Gtk.VBox):
 
 
        actor_label = Gtk.Label(xalign=1.0,yalign=0.5)
-       actor_label.set_markup("<b>%s : </b>" %("Actor : "))
+       actor_label.set_markup("<b>%s : </b>" %("Actor"))
        self.actor_field = Gtk.Label("", xalign=0,yalign=0.5)
 
 
        actor_hbox = Gtk.HBox(margin_bottom=6)
+       actor_hbox.set_border_width(1)
        self.actor_image = Gtk.Image()
        self.actor_image.set_size_request(32, 32)
        actor_hbox.pack_start(self.actor_image, False, False, 12)

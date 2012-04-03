@@ -43,41 +43,16 @@ class ExplorerMainWindow(Gtk.Window):
         main_box.margin = 12
         self.add(main_box)
 
-        toolbar = Gtk.Toolbar()
-
-        # New Tool Item
-        toolitem_new = Gtk.ToolButton(label="New",icon_name="add")
-        toolitem_new.connect("clicked", self.toolitem_new_clicked)
-        toolbar.insert(toolitem_new, -1)
-
-        # Load Tool Item
-        toolitem_load = Gtk.ToolButton(stock_id=Gtk.STOCK_OPEN,label="Load")
-        toolitem_load.connect("clicked", self.toolitem_load_clicked)
-        toolbar.insert(toolitem_load, -1)
-
-        #main_box.pack_start(toolbar, False, True, 0)
-
-        self.filter_manager = FilterManagerDialog()
-
         # Create tabs
         self.notebook = Gtk.Notebook()
         main_box.pack_start(self.notebook, True, True, 12)
 
-        self.monitor_window = MonitorWindow(self.client)
+        self.monitor_window = MonitorWindow(self.client, self)
         self.notebook.append_page(self.monitor_window, Gtk.Label("Monitor Events"))
         self.explorer_window = ExplorerWindow()
         self.notebook.append_page(self.explorer_window, Gtk.Label("Explore Events"))
 
         self.show_all()
-
-    def toolitem_new_clicked(self, button):
-        print("New Tool Item Clicked")
-
-    def toolitem_load_clicked(self, button):
-        res = self.filter_manager.run()
-        self.filter_manager.hide()
-        if res == Gtk.ResponseType.OK:
-            print("Accepted")
 
 
 class MonitorWindow(Gtk.VBox):
@@ -85,11 +60,15 @@ class MonitorWindow(Gtk.VBox):
     monitor_builtin = {}
     monitor_custom = {}
     selected_monitor_view = None
+    main_window = None
 
-    def __init__(self, zeitgeist_client):
+    def __init__(self, zeitgeist_client, window):
         super(MonitorWindow, self).__init__()
 
-        self.monitor_dialog = FilterManagerDialog()
+        self.main_window = window
+
+        self.monitor_dialog = FilterManagerDialog(self.main_window)
+        self.monitor_dialog.set_transient_for(self.main_window)
         self.client = zeitgeist_client
 
         self.hbox = Gtk.HBox()
