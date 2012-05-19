@@ -140,7 +140,6 @@ class FilterManagerDialog(Gtk.Dialog):
         self.custom_viewer = TemplateViewer()
         self.custom_box.pack_start(self.custom_viewer, False, False, 0)
 
-
     def get_selected_index(self):
         if self.is_predefined:
             selection = self.predefined_view.get_selection()
@@ -176,7 +175,6 @@ class FilterManagerDialog(Gtk.Dialog):
             else:
                 self.custom_viewer.set_values(self.custom_event_filters[index])
 
-
     def on_add_clicked(self,widget):
         template = self.run_template_add_edit_dialog()
         if template is not None:
@@ -199,7 +197,6 @@ class FilterManagerDialog(Gtk.Dialog):
                 del self.custom_event_filters[index]
                 break
 
-
     def run_template_add_edit_dialog(self,template=None):
 
         self.dialog.set_template(template)
@@ -219,7 +216,3 @@ class FilterManagerDialog(Gtk.Dialog):
                 return None
 
         return template
-
-
-
-

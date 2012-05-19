@@ -3,41 +3,44 @@
 #
 # Zeitgeist Explorer
 #
-# Copyright © 2012 Manish Sinha <manishsinha@ubuntu.com>
+# Copyright © 2012 Manish Sinha <manishsinha@ubuntu.com>.
+# Copyright © 2011-2012 Collabora Ltd.
+#             By Siegfried-A. Gevatter Pujals <siegfried@gevatter.com>
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
 # by the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU Lesser General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.";
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Pango
+from gi.repository import Gtk, Gdk, Pango
 
 from datetime import datetime
 
 from templates import BuiltInFilters
 from eventwidgets import EventViewer
+from remote import get_zeitgeist
 
 from zeitgeist.datamodel import Event, Subject, Interpretation, \
     Manifestation, StorageState, ResultType, Symbol
-from zeitgeist.client import Monitor
 
 class MonitorViewer(Gtk.VBox):
 
-    def __init__(self, zeitgeist_client):
+    _client = None
+    _is_running = False
+
+    def __init__(self):
         super(MonitorViewer, self).__init__()
 
-        self.client = zeitgeist_client
+        self._client = get_zeitgeist()
         self.monitor = None
-        self.is_running = False
         # The Entry for this MonitorViewer
         self.entry = None
 
@@ -50,7 +53,6 @@ class MonitorViewer(Gtk.VBox):
 
         self.desc_entry = Gtk.Label(xalign=0,yalign=0,wrap=True)
         self.pack_start(self.desc_entry, False, False, 6)
-
 
         # ButtonBox
         self.button_box = Gtk.HButtonBox(False)
@@ -77,46 +79,9 @@ class MonitorViewer(Gtk.VBox):
         self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         self.pack_start(self.scroll, True, True, 6)
 
-        # Event Id, TimeStamp, Interpretation, Manifestation, Actor
-        self.store = Gtk.ListStore( int, str, str, str, str)
-        self.treeview = Gtk.TreeView(model=self.store)
-        self.treeview.connect("cursor-changed", self.on_event_selected)
+        self.treeview = EventsTreeView()
+        self.treeview.set_selection_changed_cb(self.on_event_selected)
         self.scroll.add(self.treeview)
-
-        column_id = Gtk.TreeViewColumn("ID")
-        self.treeview.append_column(column_id)
-        id_rend = Gtk.CellRendererText()
-        column_id.pack_start(id_rend, False)
-        column_id.add_attribute(id_rend, "markup", 0)
-        column_id.set_resizable(True)
-
-        column_time = Gtk.TreeViewColumn("Timestamp")
-        self.treeview.append_column(column_time)
-        time_rend = Gtk.CellRendererText()
-        column_time.pack_start(time_rend, False)
-        column_time.add_attribute(time_rend, "markup", 1)
-        column_time.set_resizable(True)
-
-        column_inter = Gtk.TreeViewColumn("Interpretation")
-        self.treeview.append_column(column_inter)
-        inter_rend = Gtk.CellRendererText()
-        column_inter.pack_start(inter_rend, False)
-        column_inter.add_attribute(inter_rend, "markup", 2)
-        column_inter.set_resizable(True)
-
-        column_manif = Gtk.TreeViewColumn("Manifestation")
-        self.treeview.append_column(column_manif)
-        manif_rend = Gtk.CellRendererText()
-        column_manif.pack_start(manif_rend, False)
-        column_manif.add_attribute(manif_rend, "markup", 3)
-        column_manif.set_resizable(True)
-
-        column_actor = Gtk.TreeViewColumn("Actor")
-        self.treeview.append_column(column_actor)
-        actor_rend = Gtk.CellRendererText()
-        column_actor.pack_start(actor_rend, False)
-        column_actor.add_attribute(actor_rend, "markup", 4)
-        column_actor.set_resizable(True)
 
         self.viewer = EventViewer()
         self.pack_start(self.viewer, False, False, 6)
@@ -135,30 +100,21 @@ class MonitorViewer(Gtk.VBox):
                     Gtk.IconSize.BUTTON))
             self.button_box.pack_start(self.edit, False, False, 6)
 
-
     def monitor_insert(self, time_range, events):
         for event in events:
-            self.events[event.get_id()] = event
-
-            timestamp = int(str(event.get_timestamp()))
-            time = datetime.fromtimestamp(timestamp/1000).strftime("%Y-%m-%d %I:%M:%S %p")
-
-            actor = event.get_actor()
-
-            event_inter = str(event.get_interpretation())
-            interpretation = event_inter.split("#")[-1]
-            event_manifes = str(event.get_manifestation())
-            manifestation = event_manifes.split("#")[-1]
-
-            self.store.append([event.get_id(), time, interpretation, manifestation, actor])
+            self.events[event.id] = event
+        self.treeview.add_events(events)
 
     def monitor_delete(self, time_range, event_ids):
+        # FIXME: change row background to red or something
         pass
 
     def clear_events(self, button):
         self.events.clear()
         self.viewer.map(Event.new_for_values(subjects=[Subject()]))
-
+        self.treeview.set_events([])
+        # FIXME:
+        wtf = """
         model = self.treeview.get_model()
         print type(model)
         _iter = model.get_iter_first()
@@ -170,35 +126,112 @@ class MonitorViewer(Gtk.VBox):
         _iter = model.get_iter_first()
         if _iter is not None:
             self.store.remove(_iter)
+            """
 
     def start_monitor(self, button):
         self.start.set_sensitive(False)
         self.stop.set_sensitive(True)
-        self.is_running = True
-        self.monitor = self.client.install_monitor(self.entry[3], \
+        self._is_running = True
+        self.monitor = self._client.install_monitor(self.entry[3], \
             [self.entry[2]], self.monitor_insert, self.monitor_delete)
 
     def stop_monitor(self, button):
         self.start.set_sensitive(True)
         self.stop.set_sensitive(False)
-        self.is_running = False
-        self.client.remove_monitor(self.monitor)
+        self._is_running = False
+        self._client.remove_monitor(self.monitor)
 
     def monitor_clear(self, button):
         pass
 
     def is_monitor_running(self):
-        return self.is_running
+        return self._is_running
 
     def monitor_stop(self):
         self.stop_monitor(self.stop)
 
-    def on_event_selected(self, treeview):
-        selection = self.treeview.get_selection()
-        if selection is not None:
+    def on_event_selected(self, event_id):
+        event = self.events[event_id]
+        self.viewer.map(event)
+
+class EventsTreeView(Gtk.TreeView):
+
+    # TODO: It may make sense to use GenericTreeModel here.
+    _store = None
+    _selection_changed_cb = None
+
+    def __init__(self):
+        super(EventsTreeView, self).__init__()
+        
+        # event id, timestamp, interpretation, manifestation, actor
+        # FIXME: TreeStore
+        self._store = Gtk.ListStore(int, str, str, str, str) # GObject.TYPE_PYOBJECT)
+        self.set_model(self._store)
+        self.set_search_column(0)
+        
+        col = self._create_column(_('ID'), 0)
+        col = self._create_column(_('Timestamp'), 1)
+        col = self._create_column(_('Interpretation'), 2)
+        col = self._create_column(_('Manifestation'), 3)
+        col = self._create_column(_('Actor'), 4)
+        
+        self.connect('button-press-event', self._on_click)
+        self.connect('cursor-changed', self._on_selection_changed)
+
+    def _create_column(self, name, data_col, cell_renderer=Gtk.CellRendererText()):
+        column = Gtk.TreeViewColumn(name, cell_renderer)
+        column.set_expand(True)
+        column.set_resizable(True)
+        column.set_sort_column_id(data_col)
+        column.add_attribute(cell_renderer, 'text', data_col)
+        self.append_column(column)
+        return (column, cell_renderer)
+
+    # FIXME
+    def _get_data_from_event(self, event):
+        x, y = (int(round(event.x)), int(round(event.y)))
+        treepath = self.get_path_at_pos(x, y)[0]
+        treeiter = self._store.get_iter(treepath)
+        return self._store.get_value(treeiter, 3)
+
+    # FIXME
+    def _on_click(self, widget, event):
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            data = self._get_data_from_event(event)
+            if isinstance(data, Event):
+                details.EventDetails(data)
+            elif isinstance(data, Subject):
+                details.SubjectDetails(data)
+            else:
+                print 'Unknown row selected.'
+
+    def _on_selection_changed(self, widget):
+        selection = self.get_selection()
+        if selection:
             model, _iter = selection.get_selected()
-            if _iter is not None:
+            if _iter:
                 event_id = model.get(_iter, 0)[0]
-                if self.events.has_key(event_id):
-                    event = self.events[event_id]
-                    self.viewer.map(event)
+                if self._selection_changed_cb:
+                    self._selection_changed_cb(event_id)
+        return None
+
+    def add_event(self, event):
+        self._store.append([event.id, event.date_string,
+            event.interp_string, event.manif_string, unicode(event.actor)])
+        #event_iter = self._store.append(None, [event.id, event.date_string,
+        #    event.interp_string, event.manif_string, unicode(event.actor)])
+        #for subject in event.subjects:
+        #    self._store.append(event_iter, [None, subject.text,
+        #        subject.interp_string, subject.manif_string, subject.mimetype])
+        #self.expand_row(event_iter)
+
+    def add_events(self, events):
+        map(self.add_event, events)
+
+    def set_events(self, events):
+        self._store.clear()
+        self.add_events(events)
+        self.expand_all()
+
+    def set_selection_changed_cb(self, cb):
+        self._selection_changed_cb = cb

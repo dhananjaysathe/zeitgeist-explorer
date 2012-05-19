@@ -5,26 +5,26 @@
 #
 # Copyright © 2012 Manish Sinha <manishsinha@ubuntu.com>
 # Copyright © 2012 Dhananjay Sathe <dhananjaysathe@gmail.com>
+# Copyright © 2012 Collabora Ltd.
+#             By Siegfried-A. Gevatter Pujals <siegfried@gevatter.com>
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
 # by the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU Lesser General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.";
-#
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk, Pango
 
 from filtermanager import FilterManagerDialog
 from monitorviewer import MonitorViewer
-from zeitgeist.client import ZeitgeistClient
 
 class ExplorerMainWindow(Gtk.Window):
 
@@ -36,8 +36,6 @@ class ExplorerMainWindow(Gtk.Window):
         self.set_title("Zeitgeist Explorer")
         self.set_default_size(800, 600)
 
-        self.client = ZeitgeistClient()
-
         main_box = Gtk.VBox()
         main_box.spacing = 6
         main_box.margin = 12
@@ -47,7 +45,7 @@ class ExplorerMainWindow(Gtk.Window):
         self.notebook = Gtk.Notebook()
         main_box.pack_start(self.notebook, True, True, 12)
 
-        self.monitor_window = MonitorWindow(self.client, self)
+        self.monitor_window = MonitorWindow(self)
         self.notebook.append_page(self.monitor_window, Gtk.Label("Monitor Events"))
         self.explorer_window = ExplorerWindow()
         self.notebook.append_page(self.explorer_window, Gtk.Label("Explore Events"))
@@ -62,14 +60,13 @@ class MonitorWindow(Gtk.VBox):
     selected_monitor_view = None
     main_window = None
 
-    def __init__(self, zeitgeist_client, window):
+    def __init__(self, window):
         super(MonitorWindow, self).__init__()
 
         self.main_window = window
 
         self.monitor_dialog = FilterManagerDialog(self.main_window)
         self.monitor_dialog.set_transient_for(self.main_window)
-        self.client = zeitgeist_client
 
         self.hbox = Gtk.HBox()
         self.pack_start(self.hbox, True, True, 12)
@@ -132,7 +129,7 @@ class MonitorWindow(Gtk.VBox):
 
                 self.monitors.append([index, entry[0], is_predefined])
                 # Add it in the list of ids
-                monitor_inst = MonitorViewer(self.client)
+                monitor_inst = MonitorViewer()
                 monitor_inst.map(index, is_predefined)
                 if is_predefined:
                     self.monitor_builtin[index] = monitor_inst
@@ -170,7 +167,6 @@ class MonitorWindow(Gtk.VBox):
                     self.selected_monitor_view= None
 
                 self.monitors.remove(_iter)
-
 
     def on_treeview_selected(self, treeview):
         selection = self.monitor_tree.get_selection()

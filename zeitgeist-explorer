@@ -24,6 +24,13 @@ import gettext
 
 from zgexplorer.window import ExplorerMainWindow
 
-if __name__ == '__main__':
+def main():
+	gettext.install('zeitgeist-explorer', unicode=True)
 	ExplorerMainWindow()
-	Gtk.main()
+	Gtk.main()	
+
+if __name__ == '__main__':
+	try:
+		main()
+	except KeyboardInterrupt:
+		print 'Bye...'
