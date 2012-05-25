@@ -143,7 +143,7 @@ class FilterManagerDialog(Gtk.Dialog):
     def get_selected_index(self):
         if self.is_predefined:
             selection = self.predefined_view.get_selection()
-        else :
+        else:
             selection = self.custom_view.get_selection()
 
         if selection is not None:
@@ -157,9 +157,9 @@ class FilterManagerDialog(Gtk.Dialog):
     def get_selected_entry(self):
         index = self.get_selected_index()
         if index is not None:
-            if self.is_predefined :
+            if self.is_predefined:
                 return index,self.builtin[index], True
-            else :
+            else:
                 return index,self.custom_event_filters[index], False
 
         return None, None, None
@@ -170,7 +170,7 @@ class FilterManagerDialog(Gtk.Dialog):
     def on_cursor_changed(self, treeview):
         index = self.get_selected_index()
         if index is not None:
-            if self.is_predefined :
+            if self.is_predefined:
                 self.predefined_viewer.set_values(self.builtin[index])
             else:
                 self.custom_viewer.set_values(self.custom_event_filters[index])
@@ -192,7 +192,7 @@ class FilterManagerDialog(Gtk.Dialog):
     def on_remove_clicked(self,widget):
         index,template,is_predefind = self.get_selected_entry()
         for row in self.custom_store:
-            if row[0] == index :
+            if row[0] == index:
                 self.custom_store.remove(row.iter)
                 del self.custom_event_filters[index]
                 break
@@ -204,7 +204,7 @@ class FilterManagerDialog(Gtk.Dialog):
 
         while True:
             response_id = self.dialog.run()
-            if response_id in [Gtk.ResponseType.OK,Gtk.ResponseType.APPLY] :
+            if response_id in [Gtk.ResponseType.OK,Gtk.ResponseType.APPLY]:
                 template = self.dialog.get_template()
 
                 if response_id == Gtk.ResponseType.OK:

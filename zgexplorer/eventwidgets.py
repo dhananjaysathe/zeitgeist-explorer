@@ -59,9 +59,9 @@ class TimeRangeViewer(Gtk.VBox):
         self.start_time.update_sensitivity(False)
         self.end_time.update_sensitivity(False)
 
-        enteries_box.pack_start(Gtk.Label('From :',xalign=0 ,yalign=0.5),False,False,0)
+        enteries_box.pack_start(Gtk.Label('From:',xalign=0 ,yalign=0.5),False,False,0)
         enteries_box.pack_start(self.start_time,False,False,1)
-        enteries_box.pack_start(Gtk.Label('To :',xalign=0 ,yalign=0.5),False,False,0)
+        enteries_box.pack_start(Gtk.Label('To:',xalign=0 ,yalign=0.5),False,False,0)
         enteries_box.pack_start(self.end_time,False,False,1)
 
     def get_start_time(self):
@@ -85,7 +85,7 @@ class DatetimePicker(Gtk.HBox):
         #date
         date_holder = Gtk.HBox()
         self.pack_start(date_holder,False,False,3)
-        date_holder.pack_start(Gtk.Label('DD|MM|YY :'),False,False,3)
+        date_holder.pack_start(Gtk.Label('DD|MM|YY:'),False,False,3)
         self.date_spin_day = Gtk.SpinButton(numeric=True)
         self.date_spin_day.set_adjustment(Gtk.Adjustment(lower=1,
                  upper=32,page_size=1,step_increment=1,value=time.day))
@@ -163,7 +163,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         table = Gtk.Table(1,2,True)
         box.pack_start(table,False,False,0)
 
-        label = Gtk.Label('Result Type :',xalign=0,yalign=0.5)
+        label = Gtk.Label('Result Type:',xalign=0,yalign=0.5)
         table.attach(label, 0, 1, 0, 1, xpadding=6 ,ypadding=6)
         self.result_type = Gtk.ComboBoxText()
         self.result_type.set_active(28)
@@ -179,18 +179,18 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         event_label.set_markup("<b>%s</b>" %("Event"))
 
         # Event Interpretation
-        event_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
+        event_inter_label = Gtk.Label("Interpretation:",xalign=0,yalign=0.5)
         self.event_inter_field = Gtk.ComboBoxText()
         for entry in event_interpretations.keys():
             self.event_inter_field.append_text(entry)
 
         # Event Manifesation
-        event_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
+        event_manifes_label = Gtk.Label("Manifestation:",xalign=0,yalign=0.5)
         self.event_manifes_field = Gtk.ComboBoxText()
         for entry in event_manifestations.keys():
            self.event_manifes_field.append_text(entry)
 
-        actor_label = Gtk.Label("Actor :",xalign=0,yalign=0.5)
+        actor_label = Gtk.Label("Actor:",xalign=0,yalign=0.5)
         self.actor_field = Gtk.Label()
         self.actor_field.set_justify(Gtk.Justification.LEFT)
         self.actor_field.set_line_wrap(True)
@@ -216,36 +216,36 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
         subj_label.set_markup("<b>%s</b>" %("Subject"))
 
         # URI
-        uri_label = Gtk.Label("URI :",xalign=0,yalign=0.5)
+        uri_label = Gtk.Label("URI:",xalign=0,yalign=0.5)
         self.uri_field = Gtk.Entry(width_chars= 40)
 
         # Current URI
-        curr_uri_label = Gtk.Label("Current URI :",xalign=0,yalign=0.5)
+        curr_uri_label = Gtk.Label("Current URI:",xalign=0,yalign=0.5)
         self.curr_uri_field = Gtk.Entry(width_chars= 40)
 
 
         # Subject Interpretation
-        subj_inter_label = Gtk.Label("Interpretation :",xalign=0,yalign=0.5)
+        subj_inter_label = Gtk.Label("Interpretation:",xalign=0,yalign=0.5)
         self.subj_inter_field = Gtk.ComboBoxText()
         for entry in subject_interpretations.keys():
             self.subj_inter_field.append_text(entry)
 
         # Subject Manifesation
-        subj_manifes_label = Gtk.Label("Manifestation :",xalign=0,yalign=0.5)
+        subj_manifes_label = Gtk.Label("Manifestation:",xalign=0,yalign=0.5)
         self.subj_manifes_field = Gtk.ComboBoxText()
         for entry in subject_manifestations.keys():
                self.subj_manifes_field.append_text(entry)
 
         # Origin
-        origin_label = Gtk.Label("Origin :",xalign=0,yalign=0.5)
+        origin_label = Gtk.Label("Origin:",xalign=0,yalign=0.5)
         self.origin_field = Gtk.Entry(width_chars= 40)
 
         # Mimetype
-        mimetype_label = Gtk.Label("Mimetype :",xalign=0,yalign=0.5)
+        mimetype_label = Gtk.Label("Mimetype:",xalign=0,yalign=0.5)
         self.mimetype_field = Gtk.Entry(width_chars= 40)
 
         # Storage
-        storage_label = Gtk.Label("Storage :",xalign=0,yalign=0.5)
+        storage_label = Gtk.Label("Storage:",xalign=0,yalign=0.5)
         self.storage_field = Gtk.ComboBoxText()
         for entry in storage_states.keys():
                self.storage_field.append_text(entry)
@@ -276,7 +276,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
              (storage_label,(0, 1, 12, 13)),
              (self.storage_field,(1, 2, 12, 13))
          )
-        for widget_entry in attach_list :
+        for widget_entry in attach_list:
             widget,pos = widget_entry
             self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=3, ypadding=3)
 
@@ -363,7 +363,7 @@ class TemplateEditor(Gtk.Dialog): # NOTE: INCOMPLETE
             self.actor_value.set_text(app_info.get_display_name())
             self.actor_image.set_from_gicon(app_info.get_icon(), Gtk.IconSize.BUTTON)
         except:
-            print('DEBUG : Complete Application Info for %s not available',actor)
+            print('DEBUG: Complete Application Info for %s not available',actor)
             self.actor_field.set_text('')
             self.actor_value.set_text('')
             self.actor_image.clear()
@@ -416,18 +416,18 @@ class TemplateViewer(Gtk.VBox):
 
        # Event Interpretation
        event_inter_label = Gtk.Label(xalign=1.0,yalign=0.5)
-       event_inter_label.set_markup("<b>%s :</b>" %("Interpretation"))
+       event_inter_label.set_markup("<b>%s:</b>" %("Interpretation"))
        self.event_inter_field = Gtk.Label("", xalign=0,yalign=0.5)
        self.event_inter_field.set_width_chars(60)
 
        # Event Manifesation
        event_manifes_label = Gtk.Label(xalign=1.0,yalign=0.5)
-       event_manifes_label.set_markup("<b>%s : </b>" %("Manifestation"))
+       event_manifes_label.set_markup("<b>%s: </b>" %("Manifestation"))
        self.event_manifes_field = Gtk.Label("", xalign=0,yalign=0.5)
 
 
        actor_label = Gtk.Label(xalign=1.0,yalign=0.5)
-       actor_label.set_markup("<b>%s : </b>" %("Actor"))
+       actor_label.set_markup("<b>%s: </b>" %("Actor"))
        self.actor_field = Gtk.Label("", xalign=0,yalign=0.5)
 
 
@@ -445,25 +445,25 @@ class TemplateViewer(Gtk.VBox):
 
        # Subject Interpretation
        subj_inter_label = Gtk.Label(xalign=1.0,yalign=0.5)
-       subj_inter_label.set_markup("<b>%s : </b>" %("Interpretation"))
+       subj_inter_label.set_markup("<b>%s: </b>" %("Interpretation"))
        self.subj_inter_field = Gtk.Label("", xalign=0,yalign=0.5)
 
 
        # Subject Manifesation
        subj_manifes_label = Gtk.Label(xalign=1.0,yalign=0.5)
-       subj_manifes_label.set_markup("<b>%s : </b>" %("Manifestation"))
+       subj_manifes_label.set_markup("<b>%s: </b>" %("Manifestation"))
        self.subj_manifes_field = Gtk.Label("", xalign=0,yalign=0.5)
 
 
        # Mimetype
        mimetype_label = Gtk.Label(xalign=1.0,yalign=0.5)
-       mimetype_label.set_markup("<b>%s : </b>" %("Mimetype"))
+       mimetype_label.set_markup("<b>%s: </b>" %("Mimetype"))
        self.mimetype_field = Gtk.Label("", xalign=0,yalign=0.5)
 
 
        # Storage
        storage_label = Gtk.Label(xalign=1.0,yalign=0.5)
-       storage_label.set_markup("<b>%s : </b>" %("Storage"))
+       storage_label.set_markup("<b>%s: </b>" %("Storage"))
        self.storage_field = Gtk.Label("", xalign=0,yalign=0.5)
 
 
@@ -486,7 +486,7 @@ class TemplateViewer(Gtk.VBox):
             (storage_label,(0, 1, 9, 10)),
             (self.storage_field,(1, 2, 9, 10))
         )
-       for widget_entry in attach_list :
+       for widget_entry in attach_list:
            widget,pos = widget_entry
            self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=3, ypadding=3)
 
@@ -528,7 +528,7 @@ class TemplateViewer(Gtk.VBox):
             subj = ev.get_subjects()[0]
         else:
             subj = Subject()
-        if type(subj) == str :
+        if type(subj) == str:
             subj = Subject()
 
         # Subject Interpretation
@@ -657,7 +657,7 @@ class EventViewer(Gtk.VBox):
             (storage_label,(2, 3, 9, 10)),
             (self.storage_entry,(3, 4, 9, 10))
          )
-        for widget_entry in attach_list :
+        for widget_entry in attach_list:
            widget,pos = widget_entry
            self.table.attach(widget,pos[0],pos[1], pos[2], pos[3], xpadding=6, ypadding=6)
 
