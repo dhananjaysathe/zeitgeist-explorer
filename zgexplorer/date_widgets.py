@@ -19,11 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import gtk
+from gi.repository import Gtk
 import time
-import gobject
 
-class CalendarPopup(gtk.Dialog):
+class CalendarPopup(Gtk.Dialog):
 
 	calendar = None
 
@@ -32,12 +31,12 @@ class CalendarPopup(gtk.Dialog):
 
 	def __init__(self, associated_widget, callback=None):
 		super(CalendarPopup, self).__init__(None)
-		self.calendar = gtk.Calendar()
+		self.calendar = Gtk.Calendar()
 		self._associated_widget = associated_widget
 		self._callback = callback
-		self.vbox.pack_start(self.calendar)
+		self.vbox.pack_start(self.calendar, False, False, 0)
 		self.set_decorated(False)
-		self.set_position(gtk.WIN_POS_NONE)
+		self.set_position(Gtk.WindowPosition.NONE)
 		self.set_property('skip-taskbar-hint', True)
 		self.connect('focus-out-event',
 			lambda *discard: self.hide(False))
@@ -56,7 +55,7 @@ class CalendarPopup(gtk.Dialog):
 			parent_pos[1] + widget_pos.y + widget_pos.height)
 		self.show_all()
 
-class DateSelector(gtk.Button):
+class DateSelector(Gtk.Button):
 
 	_calendar_popup = None
 
@@ -72,20 +71,20 @@ class DateSelector(gtk.Button):
 	def calendar(self):
 		return self._calendar_popup.calendar
 
-class TimeSelector(gtk.HBox):
+class TimeSelector(Gtk.HBox):
 
 	_hour_selector = None
 	_minute_selector = None
 
 	def __init__(self):
 		super(TimeSelector, self).__init__()
-		self._hour_selector = gtk.SpinButton(gtk.Adjustment(0, 0, 24, 1))
-		self._minute_selector = gtk.SpinButton(gtk.Adjustment(0, 0, 60, 1))
-		self.pack_start(self._hour_selector)
-		self.pack_start(gtk.Label(':'))
-		self.pack_start(self._minute_selector)
+		self._hour_selector = Gtk.SpinButton()#Gtk.Adjustment(0, 0, 24, 1))
+		self._minute_selector = Gtk.SpinButton() #Gtk.Adjustment(0, 0, 60, 1))
+		self.pack_start(self._hour_selector, False, False, 0)
+		self.pack_start(Gtk.Label(':'), False, False, 0)
+		self.pack_start(self._minute_selector, False, False, 0)
 
-class DateTimeSelector(gtk.HBox):
+class DateTimeSelector(Gtk.HBox):
 
 	_date_selector = None
 	_time_selector = None
@@ -94,8 +93,19 @@ class DateTimeSelector(gtk.HBox):
 		super(DateTimeSelector, self).__init__()
 		self._date_selector = DateSelector()
 		self._time_selector = TimeSelector()
-		self.pack_start(self._date_selector)
-		self.pack_start(self._time_selector)
+		self.pack_start(self._date_selector, False, False, 0)
+		self.pack_start(self._time_selector, False, False, 0)
 
 	def get_timestamp(self):
 		return 0
+
+class TimeRangeViewer(DateTimeSelector):
+
+    def __init__(self, start_time=None, end_time=None):
+        super(TimeRangeViewer, self).__init__()
+
+    def get_start_time(self):
+        return 0
+
+    def get_end_time():
+        return 0
