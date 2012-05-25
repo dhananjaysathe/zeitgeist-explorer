@@ -196,8 +196,8 @@ class ConfirmMonitorStop(Gtk.Dialog):
             "Confirm Monitor Stop",'resizable',False,'modal',True,'decorated',False)
         self.set_size_request(100, 50)
 
-        self.add_button(Gtk.STOCK_YES, Gtk.ResponseType.YES)
-        self.add_button(Gtk.STOCK_NO, Gtk.ResponseType.NO)
+        self.add_button(Gtk.STOCK_DELETE, Gtk.ResponseType.YES)
+        self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.NO)
 
         box = self.get_content_area()
 
