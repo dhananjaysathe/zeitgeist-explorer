@@ -127,7 +127,8 @@ class MonitorWindow(Gtk.VBox):
                     (not is_predefined and index in self.monitor_custom.keys()):
                     return
 
-                self.monitors.append([index, entry[0], is_predefined])
+                _iter = self.monitors.append([index, entry[0], is_predefined])
+
                 # Add it in the list of ids
                 monitor_inst = MonitorViewer()
                 monitor_inst.map(index, is_predefined)
@@ -135,6 +136,9 @@ class MonitorWindow(Gtk.VBox):
                     self.monitor_builtin[index] = monitor_inst
                 else:
                     self.monitor_custom[index] = monitor_inst
+
+                # Select it
+                self.monitor_tree.set_cursor(self.monitors.get_path(_iter))
 
     def on_remove_clicked(self, button):
         selection = self.monitor_tree.get_selection()
