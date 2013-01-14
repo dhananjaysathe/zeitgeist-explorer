@@ -37,7 +37,7 @@ class FilterManagerDialog(Gtk.Dialog):
         self.set_properties('margin',12,'content-area-spacing',6) #Check Value
         self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
         self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
-        self.set_size_request(600, 700)
+        self.set_size_request(600, 600)
         self.active_page_index = 0
         self.set_type_hint(Gdk.WindowTypeHint.MENU)
         self.is_predefined = True

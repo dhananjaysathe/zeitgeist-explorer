@@ -25,6 +25,7 @@ from gi.repository import Gtk, Pango
 
 from filtermanager import FilterManagerDialog
 from monitorviewer import MonitorViewer
+from editwizard import TemplateEditWizard
 
 class ExplorerMainWindow(Gtk.Window):
 
@@ -65,12 +66,16 @@ class MonitorWindow(Gtk.VBox):
 
         self.main_window = window
 
+        self.edit_wizard = TemplateEditWizard(self.main_window)
+
         self.monitor_dialog = FilterManagerDialog(self.main_window)
         self.monitor_dialog.set_transient_for(self.main_window)
 
         self.hbox = Gtk.HBox()
         self.pack_start(self.hbox, True, True, 12)
-
+        
+        # The left list of Templates along with
+        # + and - buttons
         list_vbox = Gtk.VBox()
         self.hbox.pack_start(list_vbox, False, False, 0)
 
@@ -97,6 +102,8 @@ class MonitorWindow(Gtk.VBox):
         column_pix_name.add_attribute(name_rend, "markup", 1)
         column_pix_name.set_resizable(True)
 
+        # The toolbar which sits at the bottom just below
+        # the list of templates. This toolbar contains + and - buttons
         self.toolbar = Gtk.Toolbar(icon_size=1)
         self.toolbar.set_style(Gtk.ToolbarStyle.ICONS)
         self.toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_INLINE_TOOLBAR)
@@ -105,7 +112,7 @@ class MonitorWindow(Gtk.VBox):
 
         filter_add = Gtk.ToolButton.new(None, "Add Filter")
         filter_add.set_icon_name("list-add-symbolic")
-        filter_add.connect("clicked", self.on_add_clicked)
+        filter_add.connect("clicked", self.on_add_click)
         self.toolbar.insert(filter_add, 0)
 
         filter_remove = Gtk.ToolButton.new(None, "Remove Filter")
@@ -113,12 +120,27 @@ class MonitorWindow(Gtk.VBox):
         filter_remove.connect("clicked", self.on_remove_clicked)
         self.toolbar.insert(filter_remove, 1)
 
+    def on_add_click(self, button):
+        self.edit_wizard.run()
+        self.edit_wizard.hide()
+
     def on_add_clicked(self, button):
         res = self.monitor_dialog.run()
+        
+        # If the dialog window is simply dismissed
+        # then just close the window and continue
         if res == Gtk.ResponseType.DELETE_EVENT or res == Gtk.ResponseType.CANCEL:
             self.monitor_dialog.hide()
             return
 
+        """
+        If the selection is made and OK is clicked
+        then get the selected entry, hide the window
+        Check if it is a predefined template and if it is
+        then add it to the list of Monitors
+        Create a monitor view, add it to the list of monitors
+        and then select the monitor to be displayed
+        """
         if res == Gtk.ResponseType.OK:
             index, entry, is_predefined = self.monitor_dialog.get_selected_entry()
             if entry is not None:
