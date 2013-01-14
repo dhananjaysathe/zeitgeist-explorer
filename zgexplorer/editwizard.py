@@ -19,6 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk, Gdk, Pango
+from zeitgeist.datamodel import ResultType
 
 class TemplateEditWizard(Gtk.Dialog):
 
@@ -40,12 +41,12 @@ class TimeRangeSelector(Gtk.VBox):
 
     def __init__(self, window):
         super(TimeRangeSelector, self).__init__()
-        self.set_size_request(700, 500)
+        self.set_size_request(650, 400)
         self.main_window = window
         self.set_border_width(12)
 
-        self.start_calendar = CalendarDialog(self.main_window)
-        self.end_calendar = CalendarDialog(self.main_window)
+        self.start_calendar = Gtk.Calendar()
+        self.end_calendar = Gtk.Calendar()
 
         timerange_label = Gtk.Label("Time Range", xalign = 0.5, yalign = 0)
         self.pack_start(timerange_label, False, False, 6)
@@ -64,36 +65,20 @@ class TimeRangeSelector(Gtk.VBox):
         self.range_grid.set_column_spacing(5)
         self.pack_start(self.range_grid, False, False, 6)
 
-        from_label = Gtk.Label("From:", xalign=1, yalign=0)
-        self.range_grid.attach(from_label, 0, 0, 1, 1)
-        to_label = Gtk.Label("To:", xalign=1, yalign=0)
-        self.range_grid.attach(to_label, 0, 1, 1, 1)
+        from_label = Gtk.Label("From:", xalign=0.5, yalign=0)
+        self.range_grid.attach(from_label, 0, 0, 3, 1)
+        to_label = Gtk.Label("To:", xalign=0.5, yalign=0)
+        self.range_grid.attach(to_label, 3, 0, 3, 1)
 
         """
-        From Date Section
+        From and To Date Selection
         """
-        self.from_date = Gtk.Entry()
-        self.from_date.set_editable(False)
-        self.from_date.set_width_chars(20)
-        self.range_grid.attach(self.from_date, 1, 0, 1, 1)
-        self.from_button = Gtk.Button()
-        self.from_button.connect("clicked", self.on_start_button_clicked)
-        arrow1 = Gtk.Arrow(Gtk.ArrowType.DOWN, 0)
-        self.from_button.add(arrow1)
-        self.range_grid.attach(self.from_button, 2, 0, 1, 1)
-
-        """
-        From Time Section
-        """
-        self.to_date = Gtk.Entry()
-        self.to_date.set_editable(False)
-        self.from_date.set_width_chars(20)
-        self.range_grid.attach(self.to_date, 1, 1, 1, 1)
-        self.to_button = Gtk.Button()
-        self.to_button.connect("clicked", self.on_end_button_clicked)
-        arrow2 = Gtk.Arrow(Gtk.ArrowType.DOWN, 0)
-        self.to_button.add(arrow2)
-        self.range_grid.attach(self.to_button, 2, 1, 1, 1)
+        self.start_frame = Gtk.Frame(label="From Date:")
+        self.start_frame.add(self.start_calendar)
+        self.range_grid.attach(self.start_frame, 0, 1, 3, 1)
+        self.end_frame = Gtk.Frame(label="End Date:")
+        self.end_frame.add(self.end_calendar)
+        self.range_grid.attach(self.end_frame, 3, 1, 3, 1)
 
         """
         From Time section
@@ -101,17 +86,17 @@ class TimeRangeSelector(Gtk.VBox):
         self.from_hr = Gtk.SpinButton(numeric=True)
         self.from_hr.set_range(0, 23)
         self.from_hr.set_increments(1, 1)
-        self.range_grid.attach(self.from_hr, 3, 0, 1, 1)
+        self.range_grid.attach(self.from_hr, 0, 2, 1, 1)
 
         self.from_min = Gtk.SpinButton(numeric=True)
         self.from_min.set_range(0, 59)
         self.from_min.set_increments(1,1)
-        self.range_grid.attach(self.from_min, 4, 0, 1, 1)
+        self.range_grid.attach(self.from_min, 1, 2, 1, 1)
 
         self.from_sec = Gtk.SpinButton(numeric=True)
         self.from_sec.set_range(0, 59)
         self.from_min.set_increments(1,1)
-        self.range_grid.attach(self.from_sec, 5, 0, 1, 1)
+        self.range_grid.attach(self.from_sec, 2, 2, 1, 1)
 
 
         """
@@ -120,50 +105,48 @@ class TimeRangeSelector(Gtk.VBox):
         self.to_hr = Gtk.SpinButton(numeric=True)
         self.to_hr.set_range(0, 23)
         self.to_hr.set_increments(1, 1)
-        self.range_grid.attach(self.to_hr, 3, 1, 1, 1)
+        self.range_grid.attach(self.to_hr, 3, 2, 1, 1)
 
         self.to_min = Gtk.SpinButton(numeric=True)
         self.to_min.set_range(0, 59)
         self.to_min.set_increments(1,1)
-        self.range_grid.attach(self.to_min, 4, 1, 1, 1)
+        self.range_grid.attach(self.to_min, 4, 2, 1, 1)
 
         self.to_sec = Gtk.SpinButton(numeric=True)
         self.to_sec.set_range(0, 59)
         self.to_min.set_increments(1,1)
-        self.range_grid.attach(self.to_sec, 5, 1, 1, 1)
+        self.range_grid.attach(self.to_sec, 5, 2, 1, 1)
 
+        
+        label = Gtk.Label('Result Type:',xalign=0,yalign=0.5)
+        self.range_grid.attach(label, 0, 3, 2, 1)
+        self.result_type = Gtk.ComboBoxText()
+        self.result_type.set_active(28)
+        self.range_grid.attach(self.result_type, 2, 3, 2, 1)
+        for entry in dir(ResultType)[:-1]:
+            if not ( entry.startswith('__')):
+                self.result_type.append_text(entry)
+        # Set to MostRecentEvents
+        self.result_type.set_active(28)
+
+        label = Gtk.Label()
+        self.range_grid.attach(label, 4, 4, 1, 1)
+        self.next_button = Gtk.Button(label="Next")
+        self.range_grid.attach(self.next_button, 4, 5, 1, 1)
+        self.cancel_button = Gtk.Button(label="Cancel")
+        self.range_grid.attach(self.cancel_button, 5, 5, 1, 1)
 
         self.update_sensitivity(False)
+        self.next_button.grab_focus()
 
-    def on_end_button_clicked(self, widget):
-        self.end_calendar.show_all()
-        parent_window = self.get_parent_window()
-        window_x, window_y = parent_window.get_position()
-
-        allocation = self.to_date.get_allocation()
-        self.end_calendar.move(window_x + allocation.x, \
-                    window_y + allocation.y + allocation.height)
-        self.end_calendar.set_size_request(allocation.width, -1)
-        self.end_calendar.set_resizable(False)
-        widget.set_sensitive(False)
-        self.end_calendar.connect("focus-out-event", self.on_end_lose_focus)
-    
-    def on_end_lose_focus(self, widget, event):
-        self.end_calendar.hide()
-        self.to_button.set_sensitive(True)
-
-    def on_start_button_clicked(self, widget):
-        self.start_calendar.show_all()
 
     def update_custom_sensitivity(self, widget):
         enable = not self.always_radio.get_active()
         self.update_sensitivity(enable)
         
     def update_sensitivity(self, enable):
-        self.from_date.set_sensitive(enable)
-        self.from_button.set_sensitive(enable)
-        self.to_date.set_sensitive(enable)
-        self.to_button.set_sensitive(enable)
+        self.start_frame.set_sensitive(enable)
+        self.end_frame.set_sensitive(enable)
         self.from_hr.set_sensitive(enable)
         self.from_min.set_sensitive(enable)
         self.from_sec.set_sensitive(enable)
