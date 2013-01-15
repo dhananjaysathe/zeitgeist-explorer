@@ -20,6 +20,7 @@
 
 from gi.repository import Gtk, Gdk, Pango, GObject
 from zeitgeist.datamodel import ResultType
+from lookupdata import *
 
 class TemplateEditWizard(Gtk.Dialog):
 
@@ -33,11 +34,16 @@ class TemplateEditWizard(Gtk.Dialog):
         self.is_predefined = True
 
         box = self.get_content_area()
-        self.time_range = TimeRangeSelector(self.main_window)
+        self.time_range = TimeRangeWizardPage(self.main_window)
         self.time_range.connect("cancel", self.on_cancel_click)
         self.time_range.connect("next", self.on_next_click)
         box.pack_start(self.time_range, False, False, 6)
+
+        self.event_page = EventWizardPage(self.main_window)
+        box.pack_start(self.event_page, False, False, 6)
+
         box.show_all()
+        self.event_page.hide()
 
     def on_cancel_click(self, widget):
         self.set_default_response(Gtk.ResponseType.CLOSE)
@@ -45,10 +51,48 @@ class TemplateEditWizard(Gtk.Dialog):
 
     def on_next_click(self, widget):
         self.time_range.hide()
+        self.event_page.show()
         print("Next clicked")
         
+class EventWizardPage(Gtk.VBox):
 
-class TimeRangeSelector(Gtk.VBox):
+    def __init__(self, window):
+        super(EventWizardPage, self).__init__()
+
+        self.set_size_request(650, 400)
+        self.main_window = window
+        self.set_border_width(12)
+
+        event_label = Gtk.Label(xalign=0.5, yalign=0)
+        event_label.set_markup("<b>%s</b>" %("Event Details"))
+        self.pack_start(event_label, False, False, 6)
+
+        self.grid = Gtk.Grid()
+        self.grid.set_row_spacing(5)
+        self.grid.set_column_spacing(5)
+        self.pack_start(self.grid, False, False, 6)
+
+        event_inter_label = Gtk.Label("Interpretation:",xalign=1,yalign=0.5)
+        self.grid.attach(event_inter_label, 0, 0, 1, 1)
+        self.event_inter_combo = Gtk.ComboBoxText()
+        #self.event_inter_combo.set_hexpand(True)
+        self.event_inter_combo.set_wrap_width(600)
+        self.grid.attach(self.event_inter_combo, 2, 0, 3, 1)
+        for entry in event_interpretations.keys():
+            if entry is not None and len(entry) > 0:
+                self.event_inter_combo.append_text(entry)
+
+        # Event Manifesation
+        event_manifes_label = Gtk.Label("Manifestation:",xalign=1,yalign=0.5)
+        self.grid.attach(event_manifes_label, 0, 1, 1, 1)
+        self.event_manifes_combo = Gtk.ComboBoxText()
+        #self.event_manifes_combo.set_hexpand(True)
+        self.grid.attach(self.event_manifes_combo, 2, 1, 3, 1)
+        for entry in event_manifestations.keys():
+            if entry is not None and len(entry) > 0:
+                self.event_manifes_combo.append_text(entry)
+
+class TimeRangeWizardPage(Gtk.VBox):
 
     __gsignals__ = {
             'next' : (GObject.SIGNAL_RUN_FIRST, None, ()),
@@ -56,7 +100,7 @@ class TimeRangeSelector(Gtk.VBox):
         }
 
     def __init__(self, window):
-        super(TimeRangeSelector, self).__init__()
+        super(TimeRangeWizardPage, self).__init__()
         self.set_size_request(650, 400)
         self.main_window = window
         self.set_border_width(12)
@@ -64,7 +108,8 @@ class TimeRangeSelector(Gtk.VBox):
         self.start_calendar = Gtk.Calendar()
         self.end_calendar = Gtk.Calendar()
 
-        timerange_label = Gtk.Label("Time Range", xalign = 0.5, yalign = 0)
+        timerange_label = Gtk.Label(xalign = 0.5, yalign = 0)
+        timerange_label.set_markup("<b>%s</b>" %("Time Range"))
         self.pack_start(timerange_label, False, False, 6)
 
         self.always_radio = Gtk.RadioButton(label="Always", xalign = 0.3)
