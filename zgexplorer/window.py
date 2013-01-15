@@ -112,12 +112,13 @@ class MonitorWindow(Gtk.VBox):
 
         filter_add = Gtk.ToolButton.new(None, "Add Filter")
         filter_add.set_icon_name("list-add-symbolic")
-        filter_add.connect("clicked", self.on_add_click)
+        filter_add.connect("clicked", self.on_add_clicked)
         self.toolbar.insert(filter_add, 0)
 
         filter_remove = Gtk.ToolButton.new(None, "Remove Filter")
         filter_remove.set_icon_name("list-remove-symbolic")
-        filter_remove.connect("clicked", self.on_remove_clicked)
+        #filter_remove.connect("clicked", self.on_remove_clicked)
+        filter_remove.connect("clicked", self.on_add_click)
         self.toolbar.insert(filter_remove, 1)
 
     def on_add_click(self, button):

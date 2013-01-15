@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, Pango
+from gi.repository import Gtk, Gdk, Pango, GObject
 from zeitgeist.datamodel import ResultType
 
 class TemplateEditWizard(Gtk.Dialog):
@@ -34,10 +34,26 @@ class TemplateEditWizard(Gtk.Dialog):
 
         box = self.get_content_area()
         self.time_range = TimeRangeSelector(self.main_window)
+        self.time_range.connect("cancel", self.on_cancel_click)
+        self.time_range.connect("next", self.on_next_click)
         box.pack_start(self.time_range, False, False, 6)
         box.show_all()
 
+    def on_cancel_click(self, widget):
+        self.set_default_response(Gtk.ResponseType.CLOSE)
+        self.emit("response", Gtk.ResponseType.CLOSE)
+
+    def on_next_click(self, widget):
+        self.time_range.hide()
+        print("Next clicked")
+        
+
 class TimeRangeSelector(Gtk.VBox):
+
+    __gsignals__ = {
+            'next' : (GObject.SIGNAL_RUN_FIRST, None, ()),
+            'cancel' : (GObject.SIGNAL_RUN_FIRST, None, ())
+        }
 
     def __init__(self, window):
         super(TimeRangeSelector, self).__init__()
@@ -132,8 +148,10 @@ class TimeRangeSelector(Gtk.VBox):
         label = Gtk.Label()
         self.range_grid.attach(label, 4, 4, 1, 1)
         self.next_button = Gtk.Button(label="Next")
+        self.next_button.connect("clicked", self.on_next_clicked)
         self.range_grid.attach(self.next_button, 4, 5, 1, 1)
         self.cancel_button = Gtk.Button(label="Cancel")
+        self.cancel_button.connect("clicked", self.on_cancel_clicked)
         self.range_grid.attach(self.cancel_button, 5, 5, 1, 1)
 
         self.update_sensitivity(False)
@@ -153,6 +171,12 @@ class TimeRangeSelector(Gtk.VBox):
         self.to_hr.set_sensitive(enable)
         self.to_min.set_sensitive(enable)
         self.to_sec.set_sensitive(enable)
+
+    def on_cancel_clicked(self, button):
+        self.emit("cancel")
+
+    def on_next_clicked(self, button):
+        self.emit("next")
 
 
 class CalendarDialog(Gtk.Dialog):
