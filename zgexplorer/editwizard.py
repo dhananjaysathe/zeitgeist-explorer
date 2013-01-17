@@ -36,11 +36,14 @@ class TemplateEditWizard(Gtk.Dialog):
         box = self.get_content_area()
         self.time_range = TimeRangeWizardPage(self.main_window)
         self.time_range.connect("cancel", self.on_cancel_click)
-        self.time_range.connect("next", self.on_next_click)
+        self.time_range.connect("next", self.on_timerange_next_click)
         box.pack_start(self.time_range, False, False, 6)
 
         self.event_page = EventWizardPage(self.main_window)
         box.pack_start(self.event_page, False, False, 6)
+        self.event_page.connect("back", self.on_event_back_click)
+        self.event_page.connect("cancel", self.on_cancel_click)
+        self.event_page.connect("next", self.on_event_next_click)
 
         box.show_all()
         self.event_page.hide()
@@ -49,13 +52,24 @@ class TemplateEditWizard(Gtk.Dialog):
         self.set_default_response(Gtk.ResponseType.CLOSE)
         self.emit("response", Gtk.ResponseType.CLOSE)
 
-    def on_next_click(self, widget):
+    def on_timerange_next_click(self, widget):
         self.time_range.hide()
         self.event_page.show()
-        print("Next clicked")
         
+    def on_event_next_click(self, widget):
+        self.event_page.hide()
+
+    def on_event_back_click(self, widget):
+        self.event_page.hide()
+        self.time_range.show()
+
 class EventWizardPage(Gtk.VBox):
 
+    __gsignals__ = {
+            'back' : (GObject.SIGNAL_RUN_FIRST, None, ()),
+            'next' : (GObject.SIGNAL_RUN_FIRST, None, ()),
+            'cancel' : (GObject.SIGNAL_RUN_FIRST, None, ())
+        }
     def __init__(self, window):
         super(EventWizardPage, self).__init__()
 
@@ -77,7 +91,7 @@ class EventWizardPage(Gtk.VBox):
         self.event_inter_combo = Gtk.ComboBoxText()
         #self.event_inter_combo.set_hexpand(True)
         self.event_inter_combo.set_wrap_width(600)
-        self.grid.attach(self.event_inter_combo, 2, 0, 3, 1)
+        self.grid.attach(self.event_inter_combo, 2, 0, 4, 1)
         for entry in event_interpretations.keys():
             if entry is not None and len(entry) > 0:
                 self.event_inter_combo.append_text(entry)
@@ -87,7 +101,7 @@ class EventWizardPage(Gtk.VBox):
         self.grid.attach(event_manifes_label, 0, 1, 1, 1)
         self.event_manifes_combo = Gtk.ComboBoxText()
         #self.event_manifes_combo.set_hexpand(True)
-        self.grid.attach(self.event_manifes_combo, 2, 1, 3, 1)
+        self.grid.attach(self.event_manifes_combo, 2, 1, 4, 1)
         for entry in event_manifestations.keys():
             if entry is not None and len(entry) > 0:
                 self.event_manifes_combo.append_text(entry)
@@ -96,7 +110,7 @@ class EventWizardPage(Gtk.VBox):
         self.grid.attach(actor_label, 0, 2, 1, 1)
         self.actor_entry = Gtk.Entry()
         self.actor_entry.set_width_chars(70)
-        self.grid.attach(self.actor_entry, 2, 2, 3, 1)
+        self.grid.attach(self.actor_entry, 2, 2, 4, 1)
 
         self.actor_store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str)
         self.actor_scroll = Gtk.ScrolledWindow()
@@ -106,11 +120,12 @@ class EventWizardPage(Gtk.VBox):
                                         Gtk.PolicyType.AUTOMATIC)
 
         self.actor_treeview = Gtk.TreeView(self.actor_store)
+        self.actor_treeview.connect("cursor-changed", self.on_actor_treeview_changed)
         self.actor_scroll.add(self.actor_treeview)
         self.actor_scroll.set_min_content_height(200)
         self.actor_scroll.set_min_content_width(300)
 
-        self.grid.attach(self.actor_scroll, 2, 3, 3, 2)
+        self.grid.attach(self.actor_scroll, 2, 3, 4, 2)
 
         icon_renderer = Gtk.CellRendererPixbuf()
         icon_column = Gtk.TreeViewColumn("", icon_renderer, pixbuf=0)
@@ -132,6 +147,39 @@ class EventWizardPage(Gtk.VBox):
         for app in self.app_info:
             self.actor_store.append([self.get_icon_pixbuf(app.get_icon()),\
                     app.get_id(), app.get_name()])
+
+
+        label = Gtk.Label()
+        self.grid.attach(label, 4, 4, 1, 1)
+
+        self.back_button = Gtk.Button(label="Back")
+        self.back_button.connect("clicked", self.on_back_clicked)
+        self.grid.attach(self.back_button, 3, 5, 1, 1)
+
+        self.next_button = Gtk.Button(label="Next")
+        self.next_button.connect("clicked", self.on_next_clicked)
+        self.grid.attach(self.next_button, 4, 5, 1, 1)
+
+        self.cancel_button = Gtk.Button(label="Cancel")
+        self.cancel_button.connect("clicked", self.on_cancel_clicked)
+        self.grid.attach(self.cancel_button, 5, 5, 1, 1)
+
+    def on_actor_treeview_changed(self, widget):
+        selection = self.actor_treeview.get_selection()
+        model, iter_ = selection.get_selected()
+        actor = model.get(iter_, 1)[0]
+        print(actor)
+        self.actor_entry.set_text(actor)
+        pass
+
+    def on_back_clicked(self, button):
+        self.emit("back")
+
+    def on_cancel_clicked(self, button):
+        self.emit("cancel")
+
+    def on_next_clicked(self, button):
+        self.emit("next")
 
     def get_icon_pixbuf(self, icon, size=32):
         theme = Gtk.IconTheme.get_default()
@@ -255,6 +303,7 @@ class TimeRangeWizardPage(Gtk.VBox):
 
         label = Gtk.Label()
         self.range_grid.attach(label, 4, 4, 1, 1)
+
         self.next_button = Gtk.Button(label="Next")
         self.next_button.connect("clicked", self.on_next_clicked)
         self.range_grid.attach(self.next_button, 4, 5, 1, 1)
