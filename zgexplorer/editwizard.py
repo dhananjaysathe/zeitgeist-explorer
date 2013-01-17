@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, Pango, GObject
+from gi.repository import Gtk, Gdk, GdkPixbuf, Pango, GObject, Gio
 from zeitgeist.datamodel import ResultType
 from lookupdata import *
 
@@ -68,8 +68,8 @@ class EventWizardPage(Gtk.VBox):
         self.pack_start(event_label, False, False, 6)
 
         self.grid = Gtk.Grid()
-        self.grid.set_row_spacing(5)
-        self.grid.set_column_spacing(5)
+        self.grid.set_row_spacing(15)
+        self.grid.set_column_spacing(15)
         self.pack_start(self.grid, False, False, 6)
 
         event_inter_label = Gtk.Label("Interpretation:",xalign=1,yalign=0.5)
@@ -91,6 +91,69 @@ class EventWizardPage(Gtk.VBox):
         for entry in event_manifestations.keys():
             if entry is not None and len(entry) > 0:
                 self.event_manifes_combo.append_text(entry)
+
+        actor_label = Gtk.Label("Actor:", xalign=1, yalign=0.5)
+        self.grid.attach(actor_label, 0, 2, 1, 1)
+        self.actor_entry = Gtk.Entry()
+        self.actor_entry.set_width_chars(70)
+        self.grid.attach(self.actor_entry, 2, 2, 3, 1)
+
+        self.actor_store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str)
+        self.actor_scroll = Gtk.ScrolledWindow()
+        self.actor_scroll.set_border_width(1)
+        self.actor_scroll.set_shadow_type(Gtk.ShadowType.IN)    
+        self.actor_scroll.set_policy(   Gtk.PolicyType.AUTOMATIC,\
+                                        Gtk.PolicyType.AUTOMATIC)
+
+        self.actor_treeview = Gtk.TreeView(self.actor_store)
+        self.actor_scroll.add(self.actor_treeview)
+        self.actor_scroll.set_min_content_height(200)
+        self.actor_scroll.set_min_content_width(300)
+
+        self.grid.attach(self.actor_scroll, 2, 3, 3, 2)
+
+        icon_renderer = Gtk.CellRendererPixbuf()
+        icon_column = Gtk.TreeViewColumn("", icon_renderer, pixbuf=0)
+        self.actor_treeview.append_column(icon_column)
+
+        actor_renderer = Gtk.CellRendererText()
+        actor_column = Gtk.TreeViewColumn("Actor", actor_renderer, text=1)
+        actor_column.set_resizable(True)
+        actor_column.set_max_width(300)
+        self.actor_treeview.append_column(actor_column)
+
+        name_renderer = Gtk.CellRendererText()
+        name_column = Gtk.TreeViewColumn("Application Name", name_renderer, text=2)
+        name_column.set_resizable(True)
+        name_column.set_max_width(300)
+        self.actor_treeview.append_column(name_column)
+
+        self.app_info = Gio.DesktopAppInfo.get_all()
+        for app in self.app_info:
+            self.actor_store.append([self.get_icon_pixbuf(app.get_icon()),\
+                    app.get_id(), app.get_name()])
+
+    def get_icon_pixbuf(self, icon, size=32):
+        theme = Gtk.IconTheme.get_default()
+        icon_info = None
+        pix = None
+
+        if icon is None:
+            icon_info = theme.lookup_icon("gtk-execute", \
+                    size, Gtk.IconLookupFlags.FORCE_SVG)
+        else:
+            icon_info = theme.lookup_by_gicon(icon, \
+                    size, Gtk.IconLookupFlags.FORCE_SVG)
+            if icon_info is None:
+                icon_info = theme.lookup_icon("gtk-execute", \
+                            size, Gtk.IconLookupFlags.FORCE_SVG)
+
+        try:
+            pix = icon_info.load_icon()
+        except:
+            return None
+
+        return pix
 
 class TimeRangeWizardPage(Gtk.VBox):
 
