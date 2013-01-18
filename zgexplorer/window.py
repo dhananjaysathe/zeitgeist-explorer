@@ -67,7 +67,7 @@ class MonitorWindow(Gtk.VBox):
 
         self.main_window = window
 
-        self.edit_wizard = TemplateEditWizard(self.main_window, MonitorData(), True)
+        self.edit_wizard = TemplateEditWizard(self.main_window)
 
         self.monitor_dialog = FilterManagerDialog(self.main_window)
         self.monitor_dialog.set_transient_for(self.main_window)

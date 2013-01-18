@@ -19,16 +19,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk, Gdk, GdkPixbuf, Pango, GObject, Gio
-from zeitgeist.datamodel import ResultType
+from zeitgeist.datamodel import *
 from lookupdata import *
+from datamodel import MonitorData
+
+from datetime import datetime
 
 class TemplateEditWizard(Gtk.Dialog):
 
-    def __init__(self, window, monitor_details, is_new):
+    def __init__(self, window):
         super(TemplateEditWizard, self).__init__()
         self.main_window = window
-        self.monitor_details = monitor_details
-        self.is_new = is_new
 
         self.set_destroy_with_parent(True)
         self.set_properties('margin', 6, 'content-area-spacing', 6)
@@ -36,6 +37,7 @@ class TemplateEditWizard(Gtk.Dialog):
         self.is_predefined = True
 
         box = self.get_content_area()
+
         self.time_range = TimeRangeWizardPage(self.main_window)
         self.time_range.connect("cancel", self.on_cancel_click)
         self.time_range.connect("next", self.on_timerange_next_click)
@@ -53,6 +55,9 @@ class TemplateEditWizard(Gtk.Dialog):
         box.show_all()
         self.event_page.hide()
         self.subject_page.hide()
+        
+        m_data = MonitorData()
+        self.set_monitor_data(m_data)
 
     def on_cancel_click(self, widget):
         self.set_default_response(Gtk.ResponseType.CLOSE)
@@ -69,6 +74,12 @@ class TemplateEditWizard(Gtk.Dialog):
     def on_event_back_click(self, widget):
         self.event_page.hide()
         self.time_range.show()
+
+    def set_monitor_data(self, monitor_data):
+        self.monitor_data = monitor_data
+        self.time_range.set_data(monitor_data)
+        self.event_page.set_data(monitor_data)
+        self.subject_page.set_data(monitor_data)
 
 class SubjectWizardPage(Gtk.VBox):
 
@@ -92,6 +103,9 @@ class SubjectWizardPage(Gtk.VBox):
         self.grid.set_row_spacing(15)
         self.grid.set_column_spacing(15)
         self.pack_start(self.grid, False, False, 6)
+
+    def set_data(self, monitor_data):
+        self.monitor_data = monitor_data
 
 class EventWizardPage(Gtk.VBox):
 
@@ -196,6 +210,9 @@ class EventWizardPage(Gtk.VBox):
         self.cancel_button.connect("clicked", self.on_cancel_clicked)
         self.grid.attach(self.cancel_button, 5, 5, 1, 1)
 
+    def set_data(self, monitor_data):
+        self.monitor_data = monitor_data
+
     def on_actor_treeview_changed(self, widget):
         selection = self.actor_treeview.get_selection()
         model, iter_ = selection.get_selected()
@@ -297,7 +314,7 @@ class TimeRangeWizardPage(Gtk.VBox):
 
         self.from_sec = Gtk.SpinButton(numeric=True)
         self.from_sec.set_range(0, 59)
-        self.from_min.set_increments(1,1)
+        self.from_sec.set_increments(1,1)
         self.range_grid.attach(self.from_sec, 2, 2, 1, 1)
 
 
@@ -316,7 +333,7 @@ class TimeRangeWizardPage(Gtk.VBox):
 
         self.to_sec = Gtk.SpinButton(numeric=True)
         self.to_sec.set_range(0, 59)
-        self.to_min.set_increments(1,1)
+        self.to_sec.set_increments(1,1)
         self.range_grid.attach(self.to_sec, 5, 2, 1, 1)
 
         
@@ -345,6 +362,58 @@ class TimeRangeWizardPage(Gtk.VBox):
         self.next_button.grab_focus()
 
 
+    def set_data(self, monitor_data):
+        self.monitor_data = monitor_data
+        self.monitor_data.timerange = TimeRange.until_now()
+
+        is_always=TimeRange.is_always(self.monitor_data.timerange)
+        self.always_radio.set_active(is_always)
+        self.custom_radio.set_active(not is_always)
+
+        if not is_always:
+            print("Timerange: %s, %s"\
+            %(self.monitor_data.timerange[0], \
+            self.monitor_data.timerange[1]))
+            start_datetime = datetime.fromtimestamp(self.monitor_data.timerange[0]/1000)
+            end_datetime = datetime.fromtimestamp(self.monitor_data.timerange[1]/1000)
+
+            self.start_calendar.select_day(start_datetime.day)
+            self.start_calendar.select_month( \
+                                start_datetime.month - 1, \
+                                start_datetime.year)
+            self.from_hr.set_value(start_datetime.hour)
+            self.from_min.set_value(start_datetime.minute)
+            self.from_sec.set_value(start_datetime.second)
+
+            self.end_calendar.select_day(end_datetime.day)
+            self.end_calendar.select_month( \
+                                end_datetime.month - 1, \
+                                end_datetime.year)
+            self.to_hr.set_value(end_datetime.hour)
+            self.to_min.set_value(end_datetime.minute)
+            self.to_sec.set_value(end_datetime.second)
+
+    def save(self):
+        if self.always_radio.get_active():
+            self.monitor_data.timerange = TimeRange.always()
+
+        if self.custom_radio.get_active():
+            date = self.start_calendar.get_date()
+            start_datetime = datetime(date[0], \
+                                  date[1] + 1, \
+                                  date[2], \
+                                  int(self.from_hr.get_value()), \
+                                  int(self.from_min.get_value()), \
+                                  int(self.from_sec.get_value()))
+
+            date = self.start_calendar.get_date()
+            end_datetime = datetime(date[0], \
+                                  date[1] + 1, \
+                                  date[2], \
+                                  int(self.from_hr.get_value()), \
+                                  int(self.from_min.get_value()), \
+                                  int(self.from_sec.get_value()))
+        
     def update_custom_sensitivity(self, widget):
         enable = not self.always_radio.get_active()
         self.update_sensitivity(enable)

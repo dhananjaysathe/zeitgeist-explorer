@@ -23,12 +23,35 @@ from zeitgeist.datamodel import *
 
 class MonitorData(GObject.GObject):
 
-    name = GObject.property(type=str)
-    template = GObject.property(type=GObject.TYPE_OBJECT)
-    timerange = GObject.property(type=GObject.TYPE_OBJECT)
-
     def __init__(self):
-        timerange = TimeRange.always()
-        template = Event()
-        subj = Subject()
-        template.append_subject(subj)
+        super(MonitorData, self).__init__()
+        template = Event.new_for_values(subjects=[Subject()])
+
+        self.data = {\
+                "name" : "", \
+                "timerange" : TimeRange.always(), \
+                "template" : Event.new_for_values(subjects=[Subject()]) }
+
+    @property
+    def name(self):
+        return self.data['name']
+
+    @name.setter
+    def name(self, val):
+        self.data["name"] = val
+
+    @property
+    def timerange(self):
+        return self.data['timerange']
+
+    @timerange.setter
+    def timerange(self, val):
+        self.data["timerange"] = val
+
+    @property
+    def template(self):
+        return self.data['template']
+
+    @template.setter
+    def template(self, val):
+        self.data["template"] = val
