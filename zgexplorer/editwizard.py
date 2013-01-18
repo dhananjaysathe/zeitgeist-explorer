@@ -24,9 +24,11 @@ from lookupdata import *
 
 class TemplateEditWizard(Gtk.Dialog):
 
-    def __init__(self, window):
+    def __init__(self, window, monitor_details, is_new):
         super(TemplateEditWizard, self).__init__()
         self.main_window = window
+        self.monitor_details = monitor_details
+        self.is_new = is_new
 
         self.set_destroy_with_parent(True)
         self.set_properties('margin', 6, 'content-area-spacing', 6)
@@ -45,8 +47,12 @@ class TemplateEditWizard(Gtk.Dialog):
         self.event_page.connect("cancel", self.on_cancel_click)
         self.event_page.connect("next", self.on_event_next_click)
 
+        self.subject_page = SubjectWizardPage(self.main_window)
+        box.pack_start(self.subject_page, False, False, 6)
+
         box.show_all()
         self.event_page.hide()
+        self.subject_page.hide()
 
     def on_cancel_click(self, widget):
         self.set_default_response(Gtk.ResponseType.CLOSE)
@@ -58,10 +64,34 @@ class TemplateEditWizard(Gtk.Dialog):
         
     def on_event_next_click(self, widget):
         self.event_page.hide()
+        self.subject_page.show()
 
     def on_event_back_click(self, widget):
         self.event_page.hide()
         self.time_range.show()
+
+class SubjectWizardPage(Gtk.VBox):
+
+    __gsignals__ = {
+            'back' : (GObject.SIGNAL_RUN_FIRST, None, ()),
+            'finish' : (GObject.SIGNAL_RUN_FIRST, None, ()),
+            'cancel' : (GObject.SIGNAL_RUN_FIRST, None, ())
+        }
+    def __init__(self, window):
+        super(SubjectWizardPage, self).__init__()
+
+        self.set_size_request(650, 400)
+        self.main_window = window
+        self.set_border_width(12)
+
+        event_label = Gtk.Label(xalign=0.5, yalign=0)
+        event_label.set_markup("<b>%s</b>" %("Subject Details"))
+        self.pack_start(event_label, False, False, 6)
+
+        self.grid = Gtk.Grid()
+        self.grid.set_row_spacing(15)
+        self.grid.set_column_spacing(15)
+        self.pack_start(self.grid, False, False, 6)
 
 class EventWizardPage(Gtk.VBox):
 
@@ -92,6 +122,7 @@ class EventWizardPage(Gtk.VBox):
         #self.event_inter_combo.set_hexpand(True)
         self.event_inter_combo.set_wrap_width(600)
         self.grid.attach(self.event_inter_combo, 2, 0, 4, 1)
+        self.event_inter_combo.append_text("")
         for entry in event_interpretations.keys():
             if entry is not None and len(entry) > 0:
                 self.event_inter_combo.append_text(entry)
@@ -102,6 +133,7 @@ class EventWizardPage(Gtk.VBox):
         self.event_manifes_combo = Gtk.ComboBoxText()
         #self.event_manifes_combo.set_hexpand(True)
         self.grid.attach(self.event_manifes_combo, 2, 1, 4, 1)
+        self.event_manifes_combo.append_text("")
         for entry in event_manifestations.keys():
             if entry is not None and len(entry) > 0:
                 self.event_manifes_combo.append_text(entry)
@@ -168,9 +200,7 @@ class EventWizardPage(Gtk.VBox):
         selection = self.actor_treeview.get_selection()
         model, iter_ = selection.get_selected()
         actor = model.get(iter_, 1)[0]
-        print(actor)
         self.actor_entry.set_text(actor)
-        pass
 
     def on_back_clicked(self, button):
         self.emit("back")
@@ -290,16 +320,16 @@ class TimeRangeWizardPage(Gtk.VBox):
         self.range_grid.attach(self.to_sec, 5, 2, 1, 1)
 
         
-        label = Gtk.Label('Result Type:',xalign=0,yalign=0.5)
-        self.range_grid.attach(label, 0, 3, 2, 1)
-        self.result_type = Gtk.ComboBoxText()
-        self.result_type.set_active(28)
-        self.range_grid.attach(self.result_type, 2, 3, 2, 1)
-        for entry in dir(ResultType)[:-1]:
-            if not ( entry.startswith('__')):
-                self.result_type.append_text(entry)
+        #label = Gtk.Label('Result Type:',xalign=0,yalign=0.5)
+        #self.range_grid.attach(label, 0, 3, 2, 1)
+        #self.result_type = Gtk.ComboBoxText()
+        #self.result_type.set_active(28)
+        #self.range_grid.attach(self.result_type, 2, 3, 2, 1)
+        #for entry in dir(ResultType)[:-1]:
+            #if not ( entry.startswith('__')):
+                #self.result_type.append_text(entry)
         # Set to MostRecentEvents
-        self.result_type.set_active(28)
+        #self.result_type.set_active(28)
 
         label = Gtk.Label()
         self.range_grid.attach(label, 4, 4, 1, 1)

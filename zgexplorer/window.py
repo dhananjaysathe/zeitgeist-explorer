@@ -26,6 +26,7 @@ from gi.repository import Gtk, Pango
 from filtermanager import FilterManagerDialog
 from monitorviewer import MonitorViewer
 from editwizard import TemplateEditWizard
+from datamodel import MonitorData
 
 class ExplorerMainWindow(Gtk.Window):
 
@@ -66,7 +67,7 @@ class MonitorWindow(Gtk.VBox):
 
         self.main_window = window
 
-        self.edit_wizard = TemplateEditWizard(self.main_window)
+        self.edit_wizard = TemplateEditWizard(self.main_window, MonitorData(), True)
 
         self.monitor_dialog = FilterManagerDialog(self.main_window)
         self.monitor_dialog.set_transient_for(self.main_window)
