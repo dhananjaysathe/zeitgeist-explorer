@@ -39,6 +39,7 @@ class MonitorViewer(Gtk.VBox):
     def __init__(self):
         super(MonitorViewer, self).__init__()
 
+        self.ids = [] 
         self._client = get_zeitgeist()
         self.monitor = None
         # The Entry for this MonitorViewer
@@ -55,20 +56,26 @@ class MonitorViewer(Gtk.VBox):
         self.pack_start(self.desc_entry, False, False, 6)
 
         # ButtonBox
+        self.hbox = Gtk.HBox(True)
         self.button_box = Gtk.HButtonBox(False)
+
+        self.hbox.pack_start(Gtk.Label(), False, False, 6)
+        self.hbox.pack_start(self.button_box, False, False, 6)
+        self.hbox.pack_start(Gtk.Label(), False, False, 6)
+        
         self.button_box.set_layout(Gtk.ButtonBoxStyle.START)
-        self.pack_start(self.button_box, False, False, 6)
+        self.pack_start(self.hbox, False, False, 6)
 
-        self.start = Gtk.Button(image=Gtk.Image.new_from_stock(
+        self.start_button = Gtk.Button(image=Gtk.Image.new_from_stock(
             Gtk.STOCK_MEDIA_PLAY,Gtk.IconSize.BUTTON))
-        self.start.connect("clicked", self.start_monitor)
-        self.button_box.pack_start(self.start, False, False, 6)
+        self.start_button.connect("clicked", self.start_monitor)
+        self.button_box.pack_start(self.start_button, False, False, 6)
 
-        self.stop = Gtk.Button(image= Gtk.Image.new_from_stock(
+        self.stop_button = Gtk.Button(image= Gtk.Image.new_from_stock(
             Gtk.STOCK_MEDIA_STOP,Gtk.IconSize.BUTTON))
-        self.stop.connect("clicked", self.stop_monitor)
-        self.stop.set_sensitive(False)
-        self.button_box.pack_start(self.stop, False, False, 6)
+        self.stop_button.connect("clicked", self.stop_monitor)
+        self.stop_button.set_sensitive(False)
+        self.button_box.pack_start(self.stop_button, False, False, 6)
 
         self.clear = Gtk.Button(image=Gtk.Image.new_from_stock(
             Gtk.STOCK_CLEAR,Gtk.IconSize.BUTTON))
@@ -88,21 +95,14 @@ class MonitorViewer(Gtk.VBox):
 
         self.show_all()
 
-    def map(self, index, is_predefined):
-        self.entry = self.builtin[index] if is_predefined else self.custom_event_filters[index]
-        if self.entry is not None:
-            self.desc_entry.set_text(self.entry[1])
-
-        if is_predefined is False:
-            self.edit = Gtk.Button()
-            self.edit.set_size_request(32, 32)
-            self.edit.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_EDIT,
-                    Gtk.IconSize.BUTTON))
-            self.button_box.pack_start(self.edit, False, False, 6)
+    def map(self, template):
+        self.entry = template
 
     def monitor_insert(self, time_range, events):
         for event in events:
-            self.events[event.id] = event
+            if event.id not in self.ids:
+                self.events[event.id] = event
+                self.ids.append(event.id)
         self.treeview.add_events(events)
 
     def monitor_delete(self, time_range, event_ids):
@@ -128,18 +128,22 @@ class MonitorViewer(Gtk.VBox):
             self.store.remove(_iter)
             """
 
+    def start(self):
+        self.start_monitor(None)
+
     def start_monitor(self, button):
-        self.start.set_sensitive(False)
-        self.stop.set_sensitive(True)
+        self.start_button.set_sensitive(False)
+        self.stop_button.set_sensitive(True)
         self._is_running = True
         self.monitor = self._client.install_monitor(self.entry[3], \
             [self.entry[2]], self.monitor_insert, self.monitor_delete)
 
     def stop_monitor(self, button):
-        self.start.set_sensitive(True)
-        self.stop.set_sensitive(False)
+        self.start_button.set_sensitive(True)
+        self.stop_button.set_sensitive(False)
         self._is_running = False
         self._client.remove_monitor(self.monitor)
+        self.ids = []
 
     def monitor_clear(self, button):
         pass

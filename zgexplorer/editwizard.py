@@ -104,6 +104,94 @@ class SubjectWizardPage(Gtk.VBox):
         self.grid.set_column_spacing(15)
         self.pack_start(self.grid, False, False, 6)
 
+        
+        list_vbox = Gtk.VBox()
+        self.grid.attach(list_vbox, 0, 0, 1, 4)
+
+        monitor_vbox = Gtk.VBox()
+        list_vbox.pack_start(monitor_vbox, True, True, 0)
+
+        self.subjects = Gtk.ListStore(int)
+        self.subject_tree = Gtk.TreeView(model=self.subjects)
+        #self.subject_tree.connect("cursor-changed", self.on_treeview_selected)
+        self.subject_tree.set_size_request(200, 600)
+        self.subject_tree.set_properties('border_width',1,'visible',True
+                            ,'rules_hint',True,'headers_visible',False)
+
+        scroll = Gtk.ScrolledWindow(None, None)
+        scroll.add(self.subject_tree)
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_shadow_type(Gtk.ShadowType.IN)
+        scroll.set_border_width(1)
+        monitor_vbox.pack_start(scroll, True, True, 0)
+
+        column_pix_name = Gtk.TreeViewColumn(_('Subjects'))
+        self.subject_tree.append_column(column_pix_name)
+        name_rend = Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END)
+        column_pix_name.pack_start(name_rend, False)
+        column_pix_name.add_attribute(name_rend, "markup", 0)
+        column_pix_name.set_resizable(True)
+
+        # The toolbar which sits at the bottom just below
+        # the list of templates. This toolbar contains + and - buttons
+        self.toolbar = Gtk.Toolbar(icon_size=1)
+        self.toolbar.set_style(Gtk.ToolbarStyle.ICONS)
+        self.toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_INLINE_TOOLBAR)
+        self.toolbar.get_style_context().set_junction_sides(Gtk.JunctionSides.TOP)
+        list_vbox.pack_start(self.toolbar, False, False, 0)
+
+        filter_add = Gtk.ToolButton.new(None, "Add Filter")
+        filter_add.set_icon_name("list-add-symbolic")
+        filter_add.connect("clicked", self.on_add_clicked)
+        self.toolbar.insert(filter_add, 0)
+
+        filter_remove = Gtk.ToolButton.new(None, "Remove Filter")
+        filter_remove.set_icon_name("list-remove-symbolic")
+        #filter_remove.connect("clicked", self.on_remove_clicked)
+        filter_remove.connect("clicked", self.on_remove_clicked)
+        self.toolbar.insert(filter_remove, 1)
+
+        
+        event_inter_label = Gtk.Label("Interpretation:",xalign=1,yalign=0.5)
+        self.grid.attach(event_inter_label, 1, 0, 1, 1)
+        self.event_inter_combo = Gtk.ComboBoxText()
+        #self.event_inter_combo.set_hexpand(True)
+        self.event_inter_combo.set_wrap_width(600)
+        self.grid.attach(self.event_inter_combo, 2, 0, 2, 1)
+        self.event_inter_combo.append_text("")
+        for entry in event_interpretations.keys():
+            if entry is not None and len(entry) > 0:
+                self.event_inter_combo.append_text(entry)
+
+        # Event Manifesation
+        event_manifes_label = Gtk.Label("Manifestation:",xalign=1,yalign=0.5)
+        self.grid.attach(event_manifes_label, 1, 1, 1, 1)
+        self.event_manifes_combo = Gtk.ComboBoxText()
+        #self.event_manifes_combo.set_hexpand(True)
+        self.grid.attach(self.event_manifes_combo, 2, 1, 2, 1)
+        self.event_manifes_combo.append_text("")
+        for entry in event_manifestations.keys():
+            if entry is not None and len(entry) > 0:
+                self.event_manifes_combo.append_text(entry)
+
+        mimetype_label = Gtk.Label("Mimetype:", xalign=1, yalign=0.5)
+        self.grid.attach(mimetype_label, 1, 2, 1, 1)
+        self.mimetype_entry = Gtk.Entry()
+        self.mimetype_entry.set_width_chars(40)
+        self.grid.attach(self.mimetype_entry, 2, 2, 2, 1)
+
+        storage_label = Gtk.Label("Storage:", xalign=1, yalign=0.5)
+        self.grid.attach(storage_label, 1, 3, 1, 1)
+        self.storage_entry = Gtk.Entry()
+        self.storage_entry.set_width_chars(40)
+        self.grid.attach(self.storage_entry, 2, 3, 2, 1)
+
+    def on_add_clicked(self, button):
+        pass
+
+    def on_remove_clicked(self, button):
+        pass
+
     def set_data(self, monitor_data):
         self.monitor_data = monitor_data
 

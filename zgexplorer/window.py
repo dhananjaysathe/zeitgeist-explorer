@@ -27,6 +27,7 @@ from filtermanager import FilterManagerDialog
 from monitorviewer import MonitorViewer
 from editwizard import TemplateEditWizard
 from datamodel import MonitorData
+from templates import all_events
 
 class ExplorerMainWindow(Gtk.Window):
 
@@ -50,16 +51,18 @@ class ExplorerMainWindow(Gtk.Window):
         self.monitor_window = MonitorWindow(self)
         self.notebook.append_page(self.monitor_window, Gtk.Label("Monitor Events"))
         self.explorer_window = ExplorerWindow()
-        self.notebook.append_page(self.explorer_window, Gtk.Label("Explore Events"))
+        self.notebook.append_page(self.explorer_window, Gtk.Label("Explorer Events"))
 
         self.show_all()
 
 
 class MonitorWindow(Gtk.VBox):
 
-    monitor_builtin = {}
-    monitor_custom = {}
-    selected_monitor_view = None
+    #monitor_builtin = {}
+    #monitor_custom = {}
+    #selected_monitor_view = None
+
+    monitor_inst = None
     main_window = None
 
     def __init__(self, window):
@@ -67,149 +70,14 @@ class MonitorWindow(Gtk.VBox):
 
         self.main_window = window
 
-        self.edit_wizard = TemplateEditWizard(self.main_window)
-
-        self.monitor_dialog = FilterManagerDialog(self.main_window)
-        self.monitor_dialog.set_transient_for(self.main_window)
-
         self.hbox = Gtk.HBox()
         self.pack_start(self.hbox, True, True, 12)
-        
-        # The left list of Templates along with
-        # + and - buttons
-        list_vbox = Gtk.VBox()
-        self.hbox.pack_start(list_vbox, False, False, 0)
 
-        monitor_vbox = Gtk.VBox()
-        list_vbox.pack_start(monitor_vbox, True, True, 0)
-        self.monitors = Gtk.ListStore(int, str, bool)
-        self.monitor_tree = Gtk.TreeView(model=self.monitors)
-        self.monitor_tree.connect("cursor-changed", self.on_treeview_selected)
-        self.monitor_tree.set_size_request(200, 600)
-        self.monitor_tree.set_properties('border_width',1,'visible',True
-                            ,'rules_hint',True,'headers_visible',False)
+        self.monitor_inst = MonitorViewer()
+        self.monitor_inst.map(all_events)
+        self.hbox.pack_start(self.monitor_inst, True, True, 12)
+        self.monitor_inst.start()
 
-        scroll = Gtk.ScrolledWindow(None, None)
-        scroll.add(self.monitor_tree)
-        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll.set_shadow_type(Gtk.ShadowType.IN)
-        scroll.set_border_width(1)
-        monitor_vbox.pack_start(scroll, True, True, 0)
-
-        column_pix_name = Gtk.TreeViewColumn(_('Name'))
-        self.monitor_tree.append_column(column_pix_name)
-        name_rend = Gtk.CellRendererText(ellipsize=Pango.EllipsizeMode.END)
-        column_pix_name.pack_start(name_rend, False)
-        column_pix_name.add_attribute(name_rend, "markup", 1)
-        column_pix_name.set_resizable(True)
-
-        # The toolbar which sits at the bottom just below
-        # the list of templates. This toolbar contains + and - buttons
-        self.toolbar = Gtk.Toolbar(icon_size=1)
-        self.toolbar.set_style(Gtk.ToolbarStyle.ICONS)
-        self.toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_INLINE_TOOLBAR)
-        self.toolbar.get_style_context().set_junction_sides(Gtk.JunctionSides.TOP)
-        list_vbox.pack_start(self.toolbar, False, False, 0)
-
-        filter_add = Gtk.ToolButton.new(None, "Add Filter")
-        filter_add.set_icon_name("list-add-symbolic")
-        filter_add.connect("clicked", self.on_add_clicked)
-        self.toolbar.insert(filter_add, 0)
-
-        filter_remove = Gtk.ToolButton.new(None, "Remove Filter")
-        filter_remove.set_icon_name("list-remove-symbolic")
-        #filter_remove.connect("clicked", self.on_remove_clicked)
-        filter_remove.connect("clicked", self.on_add_click)
-        self.toolbar.insert(filter_remove, 1)
-
-    def on_add_click(self, button):
-        self.edit_wizard.run()
-        self.edit_wizard.hide()
-
-    def on_add_clicked(self, button):
-        res = self.monitor_dialog.run()
-        
-        # If the dialog window is simply dismissed
-        # then just close the window and continue
-        if res == Gtk.ResponseType.DELETE_EVENT or res == Gtk.ResponseType.CANCEL:
-            self.monitor_dialog.hide()
-            return
-
-        """
-        If the selection is made and OK is clicked
-        then get the selected entry, hide the window
-        Check if it is a predefined template and if it is
-        then add it to the list of Monitors
-        Create a monitor view, add it to the list of monitors
-        and then select the monitor to be displayed
-        """
-        if res == Gtk.ResponseType.OK:
-            index, entry, is_predefined = self.monitor_dialog.get_selected_entry()
-            if entry is not None:
-                self.monitor_dialog.hide()
-                if (is_predefined and index in self.monitor_builtin.keys()) or \
-                    (not is_predefined and index in self.monitor_custom.keys()):
-                    return
-
-                _iter = self.monitors.append([index, entry[0], is_predefined])
-
-                # Add it in the list of ids
-                monitor_inst = MonitorViewer()
-                monitor_inst.map(index, is_predefined)
-                if is_predefined:
-                    self.monitor_builtin[index] = monitor_inst
-                else:
-                    self.monitor_custom[index] = monitor_inst
-
-                # Select it
-                self.monitor_tree.set_cursor(self.monitors.get_path(_iter))
-
-    def on_remove_clicked(self, button):
-        selection = self.monitor_tree.get_selection()
-        if selection is not None:
-            model, _iter = selection.get_selected()
-            if _iter is not None:
-                index = model.get(_iter, 0)[0]
-                is_predefined = model.get(_iter, 2)[0]
-
-                monitor_inst = self.monitor_builtin[index] if is_predefined \
-                    else self.monitor_custom[index]
-                if monitor_inst.is_monitor_running():
-                    # Ask if the user wants to stop it
-                    stop = ConfirmMonitorStop()
-                    res = stop.run()
-                    stop.hide()
-                    if res == Gtk.ResponseType.NO or \
-                            res == Gtk.ResponseType.DELETE_EVENT:
-                        return
-
-                    monitor_inst.monitor_stop()
-
-                if is_predefined:
-                    self.monitor_builtin.pop(index)
-                else:
-                    self.monitor_custom.pop(index)
-
-                if self.selected_monitor_view is not None:
-                    self.hbox.remove(self.selected_monitor_view)
-                    self.selected_monitor_view= None
-
-                self.monitors.remove(_iter)
-
-    def on_treeview_selected(self, treeview):
-        selection = self.monitor_tree.get_selection()
-        if selection is not None:
-            model, _iter = selection.get_selected()
-            if _iter is not None:
-                index = model.get(_iter, 0)[0]
-                is_predefined = model.get(_iter, 2)[0]
-                monitor_viewer = self.monitor_builtin[index] if is_predefined \
-                    else self.monitor_custom[index]
-
-                if self.selected_monitor_view is not None:
-                    self.hbox.remove(self.selected_monitor_view)
-                self.hbox.pack_start(monitor_viewer, True, True, 12)
-                self.selected_monitor_view = monitor_viewer
 
 class ExplorerWindow(Gtk.VBox):
 

@@ -22,15 +22,17 @@
 from zeitgeist.datamodel import Event, Subject, Interpretation, \
         Manifestation, StorageState, ResultType, TimeRange
 
+all_events = ["All Events", \
+                "Get all the events", \
+                Event(),\
+                TimeRange.always(), \
+                ResultType.MostRecentEvents \
+             ]
+             
 class BuiltInFilters(dict):
 
     def __init__(self):
-        template1 = Event()
-        self[0] = ["All Events", \
-                   "Get all the events", \
-                   template1,\
-                   TimeRange.always(), \
-                   ResultType.MostRecentEvents]
+        self[0] = all_events
 
         template2  = Event.new_for_values(interpretation = \
             Interpretation.ACCESS_EVENT)
