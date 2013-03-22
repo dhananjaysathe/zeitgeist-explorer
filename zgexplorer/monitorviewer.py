@@ -25,7 +25,7 @@ from gi.repository import Gtk, Gdk, Pango
 from datetime import datetime
 
 from templates import BuiltInFilters
-from eventwidgets import EventDetailsViewer, EventsTreeView
+from eventwidgets import EventDetailsViewer, EventsTreeView, EventsViewer
 from remote import get_zeitgeist
 
 from zeitgeist.datamodel import Event, Subject, Interpretation, \
@@ -80,16 +80,8 @@ class MonitorViewer(Gtk.VBox):
         self.clear.connect("clicked", self.clear_events)
         self.button_box.pack_start(self.clear, False, False, 6)
 
-        self.scroll = Gtk.ScrolledWindow(None, None,border_width=1,shadow_type=Gtk.ShadowType.IN)
-        self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.pack_start(self.scroll, True, True, 6)
-
-        self.treeview = EventsTreeView()
-        self.treeview.set_selection_changed_cb(self.on_event_selected)
-        self.scroll.add(self.treeview)
-
-        self.viewer = EventDetailsViewer()
-        self.pack_start(self.viewer, False, False, 6)
+        self.viewer = EventsViewer()
+        self.pack_start(self.viewer, True, True, 6)
 
         self.show_all()
 
@@ -97,20 +89,14 @@ class MonitorViewer(Gtk.VBox):
         self.entry = template
 
     def monitor_insert(self, time_range, events):
-        for event in events:
-            if event.id not in self.ids:
-                self.events[event.id] = event
-                self.ids.append(event.id)
-        self.treeview.add_events(events)
+        self.viewer.insert(events)
 
     def monitor_delete(self, time_range, event_ids):
         # FIXME: change row background to red or something
         pass
 
     def clear_events(self, button):
-        self.events.clear()
-        self.viewer.map(Event.new_for_values(subjects=[Subject()]))
-        self.treeview.set_events([])
+        self.viewer.clear()
 
     def start(self):
         self.start_monitor(None)
@@ -121,13 +107,13 @@ class MonitorViewer(Gtk.VBox):
         self._is_running = True
         self.monitor = self._client.install_monitor(self.entry[3], \
             [self.entry[2]], self.monitor_insert, self.monitor_delete)
-
+            
     def stop_monitor(self, button):
         self.start_button.set_sensitive(True)
         self.stop_button.set_sensitive(False)
         self._is_running = False
         self._client.remove_monitor(self.monitor)
-        self.ids = []
+        self.viewer.clear()
 
     def monitor_clear(self, button):
         pass
@@ -138,42 +124,4 @@ class MonitorViewer(Gtk.VBox):
     def monitor_stop(self):
         self.stop_monitor(self.stop)
 
-    def on_event_selected(self, event_id):
-        event = self.events[event_id]
-        self.viewer.map(event)
 
-
-class EventsViewer(Gtk.VBox):
-
-    events = {}
-    
-    def __init__(self):
-        super(EventsViewer, self).__init__()
-        self.homogeneous = True
-
-        self.scroll = Gtk.ScrolledWindow(None, None,border_width=1,shadow_type=Gtk.ShadowType.IN)
-        self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.pack_start(self.scroll, True, True, 6)
-
-        self.treeview = EventsTreeView()
-        self.treeview.set_selection_changed_cb(self.on_event_selected)
-        self.scroll.add(self.treeview)
-
-        self.viewer = EventDetailsViewer()
-        self.pack_start(self.viewer, False, False, 6)
-
-    def on_event_selected(self, event_id):
-        event = self.events[event_id]
-        self.viewer.map(event)
-
-    def insert(self, events):
-        for event in events:
-            if event.id not in self.events.keys():
-                self.events[event.id] = event
-                self.ids.append(event.id)
-        self.treeview.add_events(events)
-
-    def clear(self):
-        self.events.clear()
-        self.viewer.map(Event.new_for_values(subjects=[Subject()]))
-        self.treeview.set_events([])
