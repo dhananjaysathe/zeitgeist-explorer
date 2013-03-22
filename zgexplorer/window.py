@@ -23,9 +23,7 @@
 
 from gi.repository import Gtk, Pango
 
-from filtermanager import FilterManagerDialog
 from monitorviewer import MonitorViewer
-from editwizard import TemplateEditWizard
 from datamodel import MonitorData
 from templates import all_events
 
