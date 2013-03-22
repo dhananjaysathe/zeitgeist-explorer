@@ -37,13 +37,93 @@ def get_active_text(combobox):
       return model[active][0]
 
 
+class EventsTreeView(Gtk.TreeView):
 
+    # TODO: It may make sense to use GenericTreeModel here.
+    _store = None
+    _selection_changed_cb = None
 
-class EventViewer(Gtk.VBox):
+    def __init__(self):
+        super(EventsTreeView, self).__init__()
+        
+        # event id, timestamp, interpretation, manifestation, actor
+        # FIXME: TreeStore
+        self._store = Gtk.ListStore(int, str, str, str, str) # GObject.TYPE_PYOBJECT)
+        self.set_model(self._store)
+        self.set_search_column(0)
+        
+        col = self._create_column(_('ID'), 0)
+        col = self._create_column(_('Timestamp'), 1)
+        col = self._create_column(_('Interpretation'), 2)
+        col = self._create_column(_('Manifestation'), 3)
+        col = self._create_column(_('Actor'), 4)
+        
+        self.connect('button-press-event', self._on_click)
+        self.connect('cursor-changed', self._on_selection_changed)
+
+    def _create_column(self, name, data_col, cell_renderer=Gtk.CellRendererText()):
+        column = Gtk.TreeViewColumn(name, cell_renderer)
+        column.set_expand(True)
+        column.set_resizable(True)
+        column.set_sort_column_id(data_col)
+        column.add_attribute(cell_renderer, 'text', data_col)
+        self.append_column(column)
+        return (column, cell_renderer)
+
+    # FIXME
+    def _get_data_from_event(self, event):
+        x, y = (int(round(event.x)), int(round(event.y)))
+        treepath = self.get_path_at_pos(x, y)[0]
+        treeiter = self._store.get_iter(treepath)
+        return self._store.get_value(treeiter, 3)
+
+    # FIXME
+    def _on_click(self, widget, event):
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            data = self._get_data_from_event(event)
+            if isinstance(data, Event):
+                details.EventDetails(data)
+            elif isinstance(data, Subject):
+                details.SubjectDetails(data)
+            else:
+                print 'Unknown row selected.'
+
+    def _on_selection_changed(self, widget):
+        selection = self.get_selection()
+        if selection:
+            model, _iter = selection.get_selected()
+            if _iter:
+                event_id = model.get(_iter, 0)[0]
+                if self._selection_changed_cb:
+                    self._selection_changed_cb(event_id)
+        return None
+
+    def add_event(self, event):
+        self._store.append([event.id, event.date_string,
+            event.interp_string, event.manif_string, unicode(event.actor)])
+        #event_iter = self._store.append(None, [event.id, event.date_string,
+        #    event.interp_string, event.manif_string, unicode(event.actor)])
+        #for subject in event.subjects:
+        #    self._store.append(event_iter, [None, subject.text,
+        #        subject.interp_string, subject.manif_string, subject.mimetype])
+        #self.expand_row(event_iter)
+
+    def add_events(self, events):
+        map(self.add_event, events)
+
+    def set_events(self, events):
+        self._store.clear()
+        self.add_events(events)
+        self.expand_all()
+
+    def set_selection_changed_cb(self, cb):
+        self._selection_changed_cb = cb
+
+class EventDetailsViewer(Gtk.VBox):
 
     def __init__(self):
 
-        super(EventViewer, self).__init__()
+        super(EventDetailsViewer, self).__init__()
 
         self.table = Gtk.Table(18, 4, False,border_width=1)
         self.pack_start(self.table, False, False, 6)
