@@ -58,10 +58,6 @@ class ExplorerMainWindow(Gtk.Window):
 
 class MonitorWindow(Gtk.VBox):
 
-    #monitor_builtin = {}
-    #monitor_custom = {}
-    #selected_monitor_view = None
-
     monitor_inst = None
     main_window = None
 
@@ -84,29 +80,3 @@ class ExplorerWindow(Gtk.VBox):
     def __init__(self):
         super(ExplorerWindow, self).__init__()
 
-class ConfirmMonitorStop(Gtk.Dialog):
-
-    def __init__(self):
-        super(ConfirmMonitorStop, self).__init__()
-        self.set_properties('margin',6,'padding',12,'title',
-            "Confirm Monitor Stop",'resizable',False,'modal',True,'decorated',False)
-        self.set_size_request(100, 50)
-
-        self.add_button(Gtk.STOCK_DELETE, Gtk.ResponseType.YES)
-        self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.NO)
-
-        box = self.get_content_area()
-
-        label1 = Gtk.Label(xalign=0,yalign=0.5,margin_top=12,
-                            margin_right=12,margin_left=12)
-        label1.set_markup("<b>%s</b>"
-        %("The monitor which you are trying to remove is still running"))
-
-        label2 = Gtk.Label(xalign=0,yalign=0.5,margin_top=12,
-                            margin_right=12,margin_left=12)
-        label2.set_markup("Going ahead will stop the monitor before removing it")
-
-        box.pack_start(label1, False, False, 6)
-        box.pack_start(label2, False, False, 6)
-
-        self.show_all()

@@ -50,8 +50,6 @@ class MonitorViewer(Gtk.VBox):
         self.spacing = 6
         self.margin = 12
 
-        self.builtin = BuiltInFilters()
-
         self.desc_entry = Gtk.Label(xalign=0,yalign=0,wrap=True)
         self.pack_start(self.desc_entry, False, False, 6)
 
