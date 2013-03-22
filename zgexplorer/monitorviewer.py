@@ -111,20 +111,6 @@ class MonitorViewer(Gtk.VBox):
         self.events.clear()
         self.viewer.map(Event.new_for_values(subjects=[Subject()]))
         self.treeview.set_events([])
-        # FIXME:
-        wtf = """
-        model = self.treeview.get_model()
-        print type(model)
-        _iter = model.get_iter_first()
-        while _iter is not None:
-            print model.get(_iter, 0)[0]
-            self.store.remove(_iter)
-            _iter = model.iter_next(_iter)
-
-        _iter = model.get_iter_first()
-        if _iter is not None:
-            self.store.remove(_iter)
-            """
 
     def start(self):
         self.start_monitor(None)
@@ -157,3 +143,37 @@ class MonitorViewer(Gtk.VBox):
         self.viewer.map(event)
 
 
+class EventsViewer(Gtk.VBox):
+
+    events = {}
+    
+    def __init__(self):
+        super(EventsViewer, self).__init__()
+        self.homogeneous = True
+
+        self.scroll = Gtk.ScrolledWindow(None, None,border_width=1,shadow_type=Gtk.ShadowType.IN)
+        self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.pack_start(self.scroll, True, True, 6)
+
+        self.treeview = EventsTreeView()
+        self.treeview.set_selection_changed_cb(self.on_event_selected)
+        self.scroll.add(self.treeview)
+
+        self.viewer = EventDetailsViewer()
+        self.pack_start(self.viewer, False, False, 6)
+
+    def on_event_selected(self, event_id):
+        event = self.events[event_id]
+        self.viewer.map(event)
+
+    def insert(self, events):
+        for event in events:
+            if event.id not in self.events.keys():
+                self.events[event.id] = event
+                self.ids.append(event.id)
+        self.treeview.add_events(events)
+
+    def clear(self):
+        self.events.clear()
+        self.viewer.map(Event.new_for_values(subjects=[Subject()]))
+        self.treeview.set_events([])
